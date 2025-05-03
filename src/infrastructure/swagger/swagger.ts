@@ -1,12 +1,5 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
-import swaggerUi from "swagger-ui-express";
 import swaggerJsDoc from "swagger-jsdoc";
-import { createServer, proxy } from "aws-serverless-express";
-import express from "express";
 
-const app = express();
-
-// Configuración de Swagger
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -17,21 +10,12 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `https://${process.env.API_GATEWAY_ID}.execute-api.${process.env.AWS_REGION}.amazonaws.com/${process.env.STAGE}`,
+        url: "http://localhost:3001", // Cambia esto si usas un entorno de desarrollo en AWS
       },
     ],
   },
   apis: ["./src/infrastructure/lambdas/*.ts"], // Ruta a tus archivos con anotaciones Swagger
 };
 
-const swaggerSpec = swaggerJsDoc(swaggerOptions);
-
-// Configurar Swagger UI
-app.use("/swagger-ui", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Crear servidor para AWS Lambda
-const server = createServer(app);
-
-export const handler: APIGatewayProxyHandler = (event, context) => {
-  return proxy(server, event, context);
-};
+// Generar la especificación de Swagger
+export const swaggerSpec = swaggerJsDoc(swaggerOptions);
