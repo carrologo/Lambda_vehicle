@@ -17,6 +17,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.x.x",
     "@types/node": "^22.14.1",
+    "aws-serverless-express": "^3.4.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.x.x",
     "typescript": "^5.8.3"

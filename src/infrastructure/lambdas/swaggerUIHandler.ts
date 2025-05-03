@@ -1,0 +1,36 @@
+import { APIGatewayProxyHandler } from "aws-lambda";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsDoc from "swagger-jsdoc";
+import { createServer, proxy } from "aws-serverless-express";
+import express from "express";
+
+const app = express();
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Lambda Vehicle API",
+      version: "1.0.0",
+      description: "API documentation for Lambda Vehicle",
+    },
+    servers: [
+      {
+        url: `https://${process.env.API_GATEWAY_ID}.execute-api.${process.env.AWS_REGION}.amazonaws.com/${process.env.STAGE}`,
+      },
+    ],
+  },
+  apis: ["./src/infrastructure/lambdas/*.ts"], // Ruta a tus archivos con anotaciones Swagger
+};
+
+const swaggerSpec = swaggerJsDoc(swaggerOptions);
+
+// Configurar Swagger UI
+app.use("/swagger-ui", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Crear servidor para AWS Lambda
+const server = createServer(app);
+
+export const handler: APIGatewayProxyHandler = (event, context) => {
+  return proxy(server, event, context);
+};

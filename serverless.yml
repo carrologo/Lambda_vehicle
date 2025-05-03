@@ -33,3 +33,12 @@ functions:
           path: /swagger
           method: get
           cors: true
+
+  SwaggerUI:
+  name: SwaggerUI-${opt:stage, 'dev'}
+  handler: src/infrastructure/lambdas/swaggerUIHandler.handler
+  events:
+    - http:
+        path: swagger-ui
+        method: get
+        cors: true
