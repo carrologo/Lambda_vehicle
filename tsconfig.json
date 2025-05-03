@@ -5,7 +5,8 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "src",
-    "rootDir": "./"
+    "rootDir": "./",
+    "types": ["jest", "node"]
   },
   "include": ["./**/*", "infrastructure", "application", "domain", "index.ts"]
 }

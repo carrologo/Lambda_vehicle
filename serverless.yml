@@ -13,11 +13,11 @@ plugins:
   - serverless-offline
 
 functions:
-  createClient:
-    name: createClient
+  LambdaVehicle:
+    name: LambdaVehicle-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.handler
     events:
       - http:
-          path: /clients
+          path: /vehicle
           method: post
           cors: true

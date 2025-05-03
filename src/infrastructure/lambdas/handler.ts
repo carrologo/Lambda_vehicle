@@ -1,32 +1,65 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { SupabaseClientRepository } from "../database/SupabaseClientRepository";
-import { CreateClient } from "../../application/use-cases/CreateClient";
+import { VehicleRepository } from "../database/SupabaseVehicleRepository";
+import { CreateVehicle } from "../../application/use-cases/CreateVehicle";
+import { VehicleMapper } from "../../application/mapper/VehicleMapper";
+import { ValidationError } from "../../domain/entities/errors/ValidationError";
+import { corsResponse } from "./CorsResponse";
 
-const clientRepository = new SupabaseClientRepository();
-const createClient = new CreateClient(clientRepository);
+const vehicleRepository = new VehicleRepository();
+const createVehicle = new CreateVehicle(vehicleRepository);
+/**
+ * @swagger
+ * /vehicle:
+ *   post:
+ *     summary: Create a new vehicle
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *               brand:
+ *                 type: string
+ *               line:
+ *                 type: string
+ *               fuel_type:
+ *                 type: string
+ *               kms:
+ *                 type: number
+ *               model:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Vehicle created successfully
+ *       400:
+ *         description: Validation error
+ */
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
-    const { name, email } = body;
 
-    if (!name || !email) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "Name and email are required" }),
-      };
+    const response = await createVehicle.execute(VehicleMapper.toDomain(body));
+
+    return corsResponse(201, { message: response });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return corsResponse(400, {
+        error: {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        },
+      });
     }
 
-    const client = await createClient.execute(name, email);
-
-    return {
-      statusCode: 201,
-      body: JSON.stringify(client),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: error instanceof Error ? error.message : "An unknown error occurred" }),
-    };
+    return corsResponse(500, {
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    });
   }
 };
