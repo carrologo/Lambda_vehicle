@@ -6,6 +6,7 @@ import express from "express";
 
 const app = express();
 
+// Configuración de Swagger
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",

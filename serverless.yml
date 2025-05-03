@@ -10,10 +10,12 @@ provider:
     SUPABASE_KEY: ${env:SUPABASE_KEY}
     API_GATEWAY_ID: ${env:API_GATEWAY_ID} # Agregar variable de entorno para el API Gateway ID
     STAGE: ${opt:stage, 'dev'} # Agregar variable de entorno para el stage
+    IS_OFFLINE: ${opt:isOffline, 'false'} # Detec
 
 
 plugins:
   - serverless-offline
+
 
 functions:
   LambdaVehicle:
@@ -40,5 +42,5 @@ functions:
     events:
       - http:
           path: swagger-ui
-          method: get
+          method: any
           cors: true
