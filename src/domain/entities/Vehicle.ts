@@ -14,7 +14,16 @@ export interface IVehicle {
   displacement?: number;
   seat_material?: string;
   airbags?: boolean;
+  images?: Images[]; 
+  url_images?: string; 
+
 }
+
+
+ export interface Images {
+  base64: string;
+  name: string;
+ }
 
 export class Vehicle implements IVehicle {
   id_vehicle?: number;
@@ -30,6 +39,8 @@ export class Vehicle implements IVehicle {
   displacement?: number;
   seat_material?: string;
   airbags?: boolean;
+  images?: Images[];
+  url_images?: string;
 
   constructor(data: IVehicle) {
     this.id_vehicle = data.id_vehicle;
@@ -45,6 +56,7 @@ export class Vehicle implements IVehicle {
     this.displacement = data.displacement;
     this.seat_material = data.seat_material;
     this.airbags = data.airbags;
+    this.images = data.images;
 
     this.validate();
   }

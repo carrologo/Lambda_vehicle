@@ -31,6 +31,18 @@ jobs:
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
           echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
           echo "API_GATEWAY_ID=${{ secrets.API_GATEWAY_ID }}" >> $GITHUB_ENV
+          echo "GOOGLE_TYPE=${{ secrets.GOOGLE_TYPE }}" >> $GITHUB_ENV
+          echo "GOOGLE_PROJECT_ID=${{ secrets.GOOGLE_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "GOOGLE_PRIVATE_KEY_ID=${{ secrets.GOOGLE_PRIVATE_KEY_ID }}" >> $GITHUB_ENV
+          echo "GOOGLE_PRIVATE_KEY=${{ secrets.GOOGLE_PRIVATE_KEY }}" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_EMAIL=${{ secrets.GOOGLE_CLIENT_EMAIL }}" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "GOOGLE_AUTH_URI=${{ secrets.GOOGLE_AUTH_URI }}" >> $GITHUB_ENV
+          echo "GOOGLE_TOKEN_URI=${{ secrets.GOOGLE_TOKEN_URI }}" >> $GITHUB_ENV
+          echo "GOOGLE_AUTH_PROVIDER_CERT_URL=${{ secrets.GOOGLE_AUTH_PROVIDER_CERT_URL }}" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_CERT_URL=${{ secrets.GOOGLE_CLIENT_CERT_URL }}" >> $GITHUB_ENV
+          echo "GOOGLE_UNIVERSE_DOMAIN=${{ secrets.GOOGLE_UNIVERSE_DOMAIN }}" >> $GITHUB_ENV
+          echo "SHARED_FOLDER_EMAIL=${{ secrets.SHARED_FOLDER_EMAIL }}" >> $GITHUB_ENV
 
       - name: Determine stage
         id: determine-stage
@@ -56,3 +68,15 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           API_GATEWAY_ID: ${{ secrets.API_GATEWAY_ID }}
+          GOOGLE_TYPE: ${{ secrets.GOOGLE_TYPE }}
+          GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+          GOOGLE_PRIVATE_KEY_ID: ${{ secrets.GOOGLE_PRIVATE_KEY_ID }}
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_AUTH_URI: ${{ secrets.GOOGLE_AUTH_URI }}
+          GOOGLE_TOKEN_URI: ${{ secrets.GOOGLE_TOKEN_URI }}
+          GOOGLE_AUTH_PROVIDER_CERT_URL: ${{ secrets.GOOGLE_AUTH_PROVIDER_CERT_URL }}
+          GOOGLE_CLIENT_CERT_URL: ${{ secrets.GOOGLE_CLIENT_CERT_URL }}
+          GOOGLE_UNIVERSE_DOMAIN: ${{ secrets.GOOGLE_UNIVERSE_DOMAIN }}
+          SHARED_FOLDER_EMAIL: ${{ secrets.SHARED_FOLDER_EMAIL }}

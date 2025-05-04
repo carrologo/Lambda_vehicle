@@ -4,9 +4,11 @@ import { CreateVehicle } from "../../application/use-cases/CreateVehicle";
 import { VehicleMapper } from "../../application/mapper/VehicleMapper";
 import { ValidationError } from "../../domain/entities/errors/ValidationError";
 import { corsResponse } from "./CorsResponse";
+import { UploadImagesRepository } from "../google/UploadImagesRepository";
 
 const vehicleRepository = new VehicleRepository();
-const createVehicle = new CreateVehicle(vehicleRepository);
+const uploadImagesRepository = new UploadImagesRepository();
+const createVehicle = new CreateVehicle(vehicleRepository, uploadImagesRepository);
 /**
  * @swagger
  * /vehicle:
@@ -63,3 +65,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     });
   }
 };
+
+
+
+
+

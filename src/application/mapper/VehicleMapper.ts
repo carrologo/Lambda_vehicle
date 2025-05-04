@@ -15,5 +15,6 @@ export class VehicleMapper {
         displacement: data.displacement,
         seat_material: data.seatMaterial,
         airbags: data.airbags,
+        images: data.images,
         });
     }}

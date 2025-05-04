@@ -21,6 +21,7 @@ functions:
   LambdaVehicle:
     name: LambdaVehicle-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.handler
+    timeout: 90
     events:
       - http:
           path: /vehicle
