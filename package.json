@@ -20,6 +20,8 @@
     "aws-serverless-express": "^3.4.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.x.x",
+    "file-type": "^20.5.0",
+    "googleapis": "^148.0.0",
     "typescript": "^5.8.3"
   },
   "devDependencies": {

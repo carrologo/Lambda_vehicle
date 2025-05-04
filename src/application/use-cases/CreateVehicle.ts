@@ -1,11 +1,28 @@
 import { Vehicle } from "../../domain/entities/Vehicle";
+import { IUploadImagesRepository } from "../../domain/repositories/IUploadImagesRepository";
 import { VehicleRepository } from "../../infrastructure/database/SupabaseVehicleRepository";
 export class CreateVehicle {
-  constructor(private vehicleRepository: VehicleRepository) {}
+  constructor(private vehicleRepository: VehicleRepository,
+    private uploadImagesRepository: IUploadImagesRepository
+  ) {}
 
   async execute(vehicle: Vehicle): Promise<string> {
     try {
-      await this.vehicleRepository.save(vehicle);
+      const urlImages = await this.uploadImagesRepository.uploadImages(
+        vehicle.images || [],
+        `vehicles/${vehicle.brand}/${vehicle.line}/${vehicle.model}`
+      );
+
+      if (urlImages.length === 0) {
+        throw new Error("No se pudieron subir las imágenes.");
+      }
+
+   
+      else {
+        vehicle.url_images = urlImages;
+        delete vehicle.images; // Eliminar la propiedad images después de subirlas
+        await this.vehicleRepository.save(vehicle);
+      }
 
       return "El vehículo fue ingresado correctamente.";
     } catch (error) {
