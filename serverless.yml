@@ -1,4 +1,4 @@
-service: my-serverless-api
+service: vehicle-service-api
 frameworkVersion: '4'
 
 provider:
