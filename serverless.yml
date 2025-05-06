@@ -33,12 +33,22 @@ plugins:
 functions:
   LambdaVehicle:
     name: LambdaVehicle-${opt:stage, 'dev'}
-    handler: src/infrastructure/lambdas/handler.handler
+    handler: src/infrastructure/lambdas/handler.createVehicleHandler
     timeout: 90
     events:
       - http:
           path: /vehicle
           method: post
+          cors: true
+
+  GetAllVehicles:
+    name: GetAllVehicles-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.getAllVehiclesHandler
+    timeout: 90
+    events:
+      - http:
+          path: /vehicles
+          method: get
           cors: true
   
   SwaggerDocumentation:
