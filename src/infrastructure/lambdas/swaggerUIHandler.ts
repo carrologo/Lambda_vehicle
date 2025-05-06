@@ -21,15 +21,13 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ["./src/infrastructure/lambdas/*.ts"], // Ruta a tus archivos con anotaciones Swagger
+  apis: ["./src/infrastructure/lambdas/*.ts"],
 };
 
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 
-// Configurar Swagger UI
 app.use("/swagger-ui", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Crear servidor para AWS Lambda
 const server = createServer(app);
 
 export const handler: APIGatewayProxyHandler = (event, context) => {
