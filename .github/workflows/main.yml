@@ -30,7 +30,6 @@ jobs:
         run: |
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
           echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
-          echo "API_GATEWAY_ID=${{ secrets.API_GATEWAY_ID }}" >> $GITHUB_ENV
           echo "GOOGLE_TYPE=${{ secrets.GOOGLE_TYPE }}" >> $GITHUB_ENV
           echo "GOOGLE_PROJECT_ID=${{ secrets.GOOGLE_PROJECT_ID }}" >> $GITHUB_ENV
           echo "GOOGLE_PRIVATE_KEY_ID=${{ secrets.GOOGLE_PRIVATE_KEY_ID }}" >> $GITHUB_ENV
@@ -67,7 +66,6 @@ jobs:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          API_GATEWAY_ID: ${{ secrets.API_GATEWAY_ID }}
           GOOGLE_TYPE: ${{ secrets.GOOGLE_TYPE }}
           GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
           GOOGLE_PRIVATE_KEY_ID: ${{ secrets.GOOGLE_PRIVATE_KEY_ID }}
