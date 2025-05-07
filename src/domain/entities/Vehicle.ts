@@ -15,7 +15,8 @@ export interface IVehicle {
   seat_material?: string;
   airbags?: boolean;
   images?: Images[]; 
-  url_images?: string; 
+  url_images?: string;
+  allImages?: string[]; // Cambiado a string[] para almacenar URLs de imágenes
 
 }
 
@@ -41,6 +42,7 @@ export class Vehicle implements IVehicle {
   airbags?: boolean;
   images?: Images[];
   url_images?: string;
+  allImages?: string[]; // Cambiado a string[] para almacenar URLs de imágenes
 
   constructor(data: IVehicle) {
     this.id_vehicle = data.id_vehicle;
@@ -57,6 +59,8 @@ export class Vehicle implements IVehicle {
     this.seat_material = data.seat_material;
     this.airbags = data.airbags;
     this.images = data.images;
+    this.url_images = data.url_images;
+    this.allImages = data.allImages; // Cambiado a string[] para almacenar URLs de imágenes
 
     this.validate();
   }

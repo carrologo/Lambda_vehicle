@@ -20,9 +20,11 @@ export class CreateVehicle {
         } else {
           vehicle.url_images = urlImages;
           delete vehicle.images; // Eliminar la propiedad images después de subirlas
+          delete vehicle.allImages; // Eliminar la propiedad allImages después de subirlas
           await this.vehicleRepository.save(vehicle);
         }
       }
+      delete vehicle.allImages
       await this.vehicleRepository.save(vehicle);
 
       return "El vehículo fue ingresado correctamente.";

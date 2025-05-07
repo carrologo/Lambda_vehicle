@@ -53,6 +53,14 @@ export class VehicleRepository implements IVehicleRepository {
     query = query.range(offset, offset + limit - 1);
   
     const { data, error, count } = await query;
+
+    const vehicles = (data || []).map((item) => {
+      const vehicle = new Vehicle(item as any); // Crear una instancia de Vehicle
+      return {
+        ...vehicle,
+        allImages: vehicle.url_images ? vehicle.url_images.split(",") : [], // Generar el array de imágenes
+      };
+    });
   
     if (error) {
       console.error("Error fetching vehicles:", error);
@@ -60,7 +68,7 @@ export class VehicleRepository implements IVehicleRepository {
     }
   
     return {
-      data: data as Vehicle[],
+      data: vehicles as Vehicle[],
       pagination: {
         page,
         total: count || 0,

@@ -42,49 +42,55 @@ export class UploadImagesRepository implements IUploadImagesRepository {
     try {
       // Verificar si la carpeta existe, si no, crearla
       const folderId = await this.getOrCreateFolder(folderName);
-
+  
+      const imageUrls: string[] = []; // Array para almacenar las URLs de las imágenes
+  
       for (const image of images) {
         const buffer = Buffer.from(image.base64, 'base64');
-
+  
         const fileType = await fileTypeFromBuffer(buffer);
         if (!fileType) {
           throw new Error('No se pudo determinar el tipo MIME del archivo.');
         }
-
-        const mimeType = fileType.mime; 
-        const extension = fileType.ext; 
-
+  
+        const mimeType = fileType.mime;
+        const extension = fileType.ext;
+  
         const name = image.name || `file-${Date.now()}.${extension}`;
-
+  
         const filePath = path.join(os.tmpdir(), name);
         fs.writeFileSync(filePath, buffer);
-
-        await this.drive.files.create({
+  
+        const file = await this.drive.files.create({
           requestBody: {
             name,
-            parents: [folderId], 
+            parents: [folderId],
           },
           media: {
             mimeType,
             body: fs.createReadStream(filePath),
           },
+          fields: 'id', // Obtener el ID del archivo creado
         });
+  
+        const fileId = file.data.id!;
+        const fileUrl = `https://drive.google.com/uc?id=${fileId}`; // Generar la URL pública de la imagen
+        imageUrls.push(fileUrl);
       }
-
-      // Hacer pública la carpeta
+  
+      // Hacer pública la carpeta (si no lo está ya)
       await this.drive.permissions.create({
         fileId: folderId,
         requestBody: { type: 'anyone', role: 'reader' },
       });
-
-      // Devolver la URL pública de la carpeta
-      return `https://drive.google.com/drive/folders/${folderId}`;
+  
+      // Devolver las URLs concatenadas en un solo string
+      return imageUrls.join(','); // Concatenar las URLs con comas
     } catch (error) {
       console.error('Error uploading files:', error);
       throw new Error('Error uploading files to Google Drive');
     }
   }
-
   /**
    * Obtiene el ID de una carpeta en Google Drive por su nombre, o la crea si no existe.
    * Si la carpeta es creada, se comparte con una cuenta personal.
