@@ -34,12 +34,38 @@ export class VehicleRepository implements IVehicleRepository {
       if (error.code === "PGRST116") {
         return null; // No record found
       }
-      console.error("Error fetching vehicle:", error);
       throw new Error("Failed to fetch vehicle");
     }
 
     if (!data) {
       return null;
+    }
+
+    const vehicle = new Vehicle(data as any);
+    return {
+      ...vehicle,
+      allImages: vehicle.url_images ? vehicle.url_images.split(",") : [],
+    };
+  }
+
+  async update(id: number, vehicleData: Partial<Vehicle>): Promise<Vehicle> {
+    const { data, error } = await this.supabase
+      .from("vehicle")
+      .update(vehicleData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        throw new Error(`Vehicle with ID ${id} not found`);
+      }
+      console.error("Error updating vehicle:", error);
+      throw new Error("Failed to update vehicle");
+    }
+
+    if (!data) {
+      throw new Error(`Vehicle with ID ${id} not found`);
     }
 
     const vehicle = new Vehicle(data as any);

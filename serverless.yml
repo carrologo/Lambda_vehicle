@@ -59,7 +59,17 @@ functions:
           path: /vehicles/{id}
           method: get
           cors: true
-  
+
+  UpdateVehicle:
+    name: UpdateVehicle-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.updateVehicleHandler
+    timeout: 90
+    events:
+      - http:
+          path: /vehicles/{id}
+          method: patch
+          cors: true
+
   SwaggerDocumentation:
     name: SwaggerDocumentation-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/swaggerHandler.handler
