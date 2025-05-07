@@ -2,6 +2,7 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import { VehicleRepository } from "../database/SupabaseVehicleRepository";
 import { CreateVehicle } from "../../application/use-cases/CreateVehicle";
 import { GetAllVehicles } from "../../application/use-cases/GetAllVehicles";
+import { DetailVehicle } from "../../application/use-cases/DetailVehicle";
 import { VehicleMapper } from "../../application/mapper/VehicleMapper";
 import { ValidationError } from "../../domain/entities/errors/ValidationError";
 import { corsResponse } from "./CorsResponse";
@@ -14,6 +15,7 @@ const createVehicle = new CreateVehicle(
   uploadImagesRepository
 );
 const getAllVehicles = new GetAllVehicles(vehicleRepository);
+const detailVehicle = new DetailVehicle(vehicleRepository);
 /**
  * @swagger
  * /vehicle:
@@ -156,6 +158,65 @@ export const getAllVehiclesHandler: APIGatewayProxyHandler = async (event) => {
     return corsResponse(500, {
       message:
         error instanceof Error ? error.message : "An unknown error occurred",
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /vehicle/{id}:
+ *   get:
+ *     summary: Get vehicle details by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the vehicle to retrieve
+ *     responses:
+ *       200:
+ *         description: Vehicle details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Vehicle'
+ *       404:
+ *         description: Vehicle not found
+ *       500:
+ *         description: Internal server error
+ */
+export const detailVehicleHandler: APIGatewayProxyHandler = async (event) => {
+  try {
+    const id = parseInt(event.pathParameters?.id || "0", 10);
+    
+    
+    if (isNaN(id) || id <= 0) {
+      return corsResponse(400, {
+        error: {
+          code: "INVALID_ID",
+          message: "Invalid vehicle ID provided",
+        },
+      });
+    }
+
+    const vehicle = await detailVehicle.execute(id);
+    return corsResponse(200, vehicle);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      return corsResponse(404, {
+        error: {
+          code: "VEHICLE_NOT_FOUND",
+          message: error.message,
+        },
+      });
+    }
+
+    return corsResponse(500, {
+      error: {
+        code: "INTERNAL_ERROR",
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      },
     });
   }
 };

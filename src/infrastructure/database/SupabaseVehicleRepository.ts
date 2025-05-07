@@ -23,6 +23,32 @@ export class VehicleRepository implements IVehicleRepository {
     return vehicle;
   }
 
+  async findById(id: number): Promise<Vehicle | null> {
+    const { data, error } = await this.supabase
+      .from("vehicle")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return null; // No record found
+      }
+      console.error("Error fetching vehicle:", error);
+      throw new Error("Failed to fetch vehicle");
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    const vehicle = new Vehicle(data as any);
+    return {
+      ...vehicle,
+      allImages: vehicle.url_images ? vehicle.url_images.split(",") : [],
+    };
+  }
+
   async getAll(queryParams: {
     findBy?: string;
     value?: any;
@@ -55,10 +81,10 @@ export class VehicleRepository implements IVehicleRepository {
     const { data, error, count } = await query;
 
     const vehicles = (data || []).map((item) => {
-      const vehicle = new Vehicle(item as any); // Crear una instancia de Vehicle
+      const vehicle = new Vehicle(item as any);
       return {
         ...vehicle,
-        allImages: vehicle.url_images ? vehicle.url_images.split(",") : [], // Generar el array de imágenes
+        allImages: vehicle.url_images ? vehicle.url_images.split(",") : [],
       };
     });
   

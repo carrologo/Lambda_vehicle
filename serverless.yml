@@ -49,6 +49,16 @@ functions:
           path: /vehicles
           method: get
           cors: true
+
+  DetailVehicle:
+    name: DetailVehicle-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.detailVehicleHandler
+    timeout: 90
+    events:
+      - http:
+          path: /vehicles/{id}
+          method: get
+          cors: true
   
   SwaggerDocumentation:
     name: SwaggerDocumentation-${opt:stage, 'dev'}
