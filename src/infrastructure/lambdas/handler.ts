@@ -3,6 +3,7 @@ import { VehicleRepository } from "../database/SupabaseVehicleRepository";
 import { CreateVehicle } from "../../application/use-cases/CreateVehicle";
 import { GetAllVehicles } from "../../application/use-cases/GetAllVehicles";
 import { DetailVehicle } from "../../application/use-cases/DetailVehicle";
+import { UpdateVehicle } from "../../application/use-cases/UpdateVehicle";
 import { VehicleMapper } from "../../application/mapper/VehicleMapper";
 import { ValidationError } from "../../domain/entities/errors/ValidationError";
 import { corsResponse } from "./CorsResponse";
@@ -16,6 +17,7 @@ const createVehicle = new CreateVehicle(
 );
 const getAllVehicles = new GetAllVehicles(vehicleRepository);
 const detailVehicle = new DetailVehicle(vehicleRepository);
+const updateVehicle = new UpdateVehicle(vehicleRepository);
 /**
  * @swagger
  * /vehicle:
@@ -189,8 +191,7 @@ export const getAllVehiclesHandler: APIGatewayProxyHandler = async (event) => {
 export const detailVehicleHandler: APIGatewayProxyHandler = async (event) => {
   try {
     const id = parseInt(event.pathParameters?.id || "0", 10);
-    
-    
+
     if (isNaN(id) || id <= 0) {
       return corsResponse(400, {
         error: {
@@ -215,7 +216,184 @@ export const detailVehicleHandler: APIGatewayProxyHandler = async (event) => {
     return corsResponse(500, {
       error: {
         code: "INTERNAL_ERROR",
-        message: error instanceof Error ? error.message : "An unknown error occurred",
+        message:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      },
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /vehicle/{id}:
+ *   put:
+ *     summary: Update a vehicle by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the vehicle to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *               brand:
+ *                 type: string
+ *               line:
+ *                 type: string
+ *               version:
+ *                 type: string
+ *               transmission:
+ *                 type: string
+ *               traction:
+ *                 type: string
+ *               fuel_type:
+ *                 type: string
+ *               kms:
+ *                 type: number
+ *               model:
+ *                 type: string
+ *                 format: date
+ *               displacement:
+ *                 type: number
+ *               seat_material:
+ *                 type: string
+ *               airbags:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Vehicle updated successfully
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Vehicle not found
+ *       500:
+ *         description: Internal server error
+ */
+export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
+  try {
+    const id = parseInt(event.pathParameters?.id || "0", 10);
+    
+    if (isNaN(id) || id <= 0) {
+      return corsResponse(400, {
+        error: {
+          code: "INVALID_ID",
+          message: "Invalid vehicle ID provided",
+        },
+      });
+    }
+
+    // First check if the vehicle exists
+    const existingVehicle = await vehicleRepository.findById(id);
+    if (!existingVehicle) {
+      return corsResponse(404, {
+        error: {
+          code: "VEHICLE_NOT_FOUND",
+          message: `Vehicle with ID ${id} not found`,
+        },
+      });
+    }
+
+    const body = JSON.parse(event.body || "{}");
+    
+    // Validate that at least one field is being updated
+    if (Object.keys(body).length === 0) {
+      return corsResponse(400, {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "No update data provided",
+        },
+      });
+    }
+
+    // List of valid vehicle fields
+    const validFields = [
+      'type',
+      'brand',
+      'line',
+      'version',
+      'transmission',
+      'traction',
+      'fuel_type',
+      'kms',
+      'model',
+      'displacement',
+      'seat_material',
+      'airbags',
+      'images',
+      'url_images'
+    ];
+
+    // Check for invalid fields
+    const invalidFields = Object.keys(body).filter(field => !validFields.includes(field));
+    if (invalidFields.length > 0) {
+      return corsResponse(400, {
+        error: {
+          code: "INVALID_FIELDS",
+          message: "Invalid fields provided",
+          details: invalidFields.map(field => ({
+            field,
+            message: `Field '${field}' is not a valid vehicle field`
+          }))
+        }
+      });
+    }
+
+    // Transform the data to match the mapper's expected format
+    const transformedBody = {
+      ...body,
+      fuelType: body.fuel_type || existingVehicle.fuel_type,
+      seatMaterial: body.seat_material || existingVehicle.seat_material,
+    };
+
+    // Merge existing vehicle data with update data
+    const updateData = {
+      ...existingVehicle,
+      ...transformedBody,
+      // Ensure required fields are present from existing vehicle
+      type: body.type || existingVehicle.type,
+      brand: body.brand || existingVehicle.brand,
+      line: body.line || existingVehicle.line,
+      fuel_type: body.fuel_type || existingVehicle.fuel_type,
+      kms: body.kms ?? existingVehicle.kms,
+      model: body.model || existingVehicle.model,
+    };
+
+    const vehicleData = VehicleMapper.toDomain(updateData);
+    const updatedVehicle = await updateVehicle.execute(id, vehicleData);
+    return corsResponse(200, updatedVehicle);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return corsResponse(400, {
+        error: {
+          code: "VALIDATION_ERROR",
+          message: error.message,
+          details: error.details,
+        },
+      });
+    }
+
+    if (error instanceof Error && error.message.includes("not found")) {
+      return corsResponse(404, {
+        error: {
+          code: "VEHICLE_NOT_FOUND",
+          message: error.message,
+        },
+      });
+    }
+
+    return corsResponse(500, {
+      error: {
+        code: "INTERNAL_ERROR",
+        message:
+          error instanceof Error ? error.message : "An unknown error occurred",
       },
     });
   }
