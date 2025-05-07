@@ -1,7 +1,7 @@
 import { ValidationError } from "./errors/ValidationError";
 
 export interface IVehicle {
-  id_vehicle?: number;
+  id?: number;
   type: string;
   brand: string;
   line: string;
@@ -27,7 +27,7 @@ export interface IVehicle {
  }
 
 export class Vehicle implements IVehicle {
-  id_vehicle?: number;
+  id?: number;
   type: string;
   brand: string;
   line: string;
@@ -45,7 +45,7 @@ export class Vehicle implements IVehicle {
   allImages?: string[]; // Cambiado a string[] para almacenar URLs de imágenes
 
   constructor(data: IVehicle) {
-    this.id_vehicle = data.id_vehicle;
+    this.id = data.id;
     this.type = data.type;
     this.brand = data.brand;
     this.line = data.line;
