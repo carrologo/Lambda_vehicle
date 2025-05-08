@@ -327,6 +327,7 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       'displacement',
       'seatMaterial',
       'airbags',
+      'images',
     ];
 
     // Check for invalid fields
@@ -363,6 +364,8 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       kms: body.kms ?? existingVehicle.kms,
       model: body.model || existingVehicle.model,
     };
+
+    delete updateData.images; // Remove images from the update data if it exists
 
     const vehicleData = VehicleMapper.toDomain(updateData);
     const updatedVehicle = await updateVehicle.execute(id, vehicleData);
