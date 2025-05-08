@@ -321,14 +321,12 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       'version',
       'transmission',
       'traction',
-      'fuel_type',
+      'fuelType',
       'kms',
       'model',
       'displacement',
-      'seat_material',
+      'seatMaterial',
       'airbags',
-      'images',
-      'url_images'
     ];
 
     // Check for invalid fields
