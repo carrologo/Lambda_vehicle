@@ -40,7 +40,7 @@ export const getImageFromVehicleHandler: APIGatewayProxyHandler = async (event) 
     return {
       statusCode: 200,
       headers: {
-        "Content-Type": "application/octet-stream",
+        "Content-Type": image.mimeType || "application/octet-stream",
         "Content-Disposition": `inline; filename="${image.name}"`,
       },
       body: image.buffer.toString("base64"),
