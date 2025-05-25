@@ -40,6 +40,15 @@ functions:
           method: post
           cors: true
 
+  GetImageFromVehicle:
+      name: GetImageFromVehicle-${opt:stage, 'dev'}
+      handler: src/infrastructure/lambdas/handler.getImageFromVehicleHandler
+      timeout: 90
+      events:
+        - http:
+            path: /image
+            method: get
+            cors: true
   GetAllVehicles:
     name: GetAllVehicles-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.getAllVehiclesHandler
