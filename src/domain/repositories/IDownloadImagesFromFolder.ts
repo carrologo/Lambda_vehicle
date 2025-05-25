@@ -1,8 +1,8 @@
 export interface IDownloadImagesFromFolder {
-/**
-   * Descarga todas las imágenes de una carpeta de Google Drive y las retorna en binario.
-   * @param folderUrl - URL pública de la carpeta en Google Drive.
-   * @returns Array de objetos con nombre y buffer de cada imagen.
+  /**
+   * Descarga una imagen de Google Drive a partir de su URL y la retorna en binario.
+   * @param fileUrl - URL pública del archivo en Google Drive.
+   * @returns Objeto con nombre y buffer de la imagen.
    */
-  downloadImagesFromFolder(folderUrl: string): Promise<{ name: string; buffer: Buffer }[]>;
-  }
+  downloadImageFromUrl(fileUrl: string): Promise<{ name: string; buffer: Buffer;  mimeType?: string }>;
+}

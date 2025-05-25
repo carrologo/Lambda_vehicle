@@ -8,8 +8,11 @@ import { VehicleMapper } from "../../application/mapper/VehicleMapper";
 import { ValidationError } from "../../domain/entities/errors/ValidationError";
 import { corsResponse } from "./CorsResponse";
 import { UploadImagesRepository } from "../google/UploadImagesRepository";
+import { GetImages } from "../../application/use-cases/GetImages";
+import { DownloadImagesFromFolder } from "../google/DownloadImagesFromFolder";
 
 const vehicleRepository = new VehicleRepository();
+const downloadAllImagesFromFolder = new DownloadImagesFromFolder();
 const uploadImagesRepository = new UploadImagesRepository();
 const createVehicle = new CreateVehicle(
   vehicleRepository,
@@ -18,6 +21,41 @@ const createVehicle = new CreateVehicle(
 const getAllVehicles = new GetAllVehicles(vehicleRepository);
 const detailVehicle = new DetailVehicle(vehicleRepository);
 const updateVehicle = new UpdateVehicle(vehicleRepository);
+
+const getImages = new GetImages(downloadAllImagesFromFolder);
+
+export const getImageFromVehicleHandler: APIGatewayProxyHandler = async (event) => {
+  try {
+    const fileUrl = event.queryStringParameters?.id;
+    if (!fileUrl) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "File URL is required" }),
+      };
+    }
+
+    // Suponiendo que tu método también retorna mimeType:
+    const image = await getImages.execute(fileUrl); // { name, buffer, mimeType }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": image.mimeType || "application/octet-stream",
+        "Content-Disposition": `inline; filename="${image.name}"`,
+      },
+      body: image.buffer.toString("base64"),
+      isBase64Encoded: true,
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      }),
+    };
+  }
+};
+
 /**
  * @swagger
  * /vehicle:

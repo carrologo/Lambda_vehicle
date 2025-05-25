@@ -5,52 +5,53 @@ export class DownloadImagesFromFolder implements IDownloadImagesFromFolder {
   private drive;
 
   constructor(auth?: any) {
-    // Si no se pasa auth, lo crea usando variables de entorno
     if (!auth) {
       auth = new google.auth.GoogleAuth({
         credentials: {
           type: process.env.GOOGLE_TYPE,
           project_id: process.env.GOOGLE_PROJECT_ID,
           private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-          private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
           client_email: process.env.GOOGLE_CLIENT_EMAIL,
           client_id: process.env.GOOGLE_CLIENT_ID,
           universe_domain: process.env.GOOGLE_UNIVERSE_DOMAIN,
         },
-        scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+        scopes: ["https://www.googleapis.com/auth/drive"],
       });
     }
     this.drive = google.drive({ version: "v3", auth });
   }
 
-  // Extrae el ID de la carpeta desde la URL
-  private extractFolderId(folderUrl: string): string | null {
-    const match = folderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-    return match ? match[1] : null;
+  private extractFileId(fileUrl: string): string | null {
+    // Soporta /file/d/ID y ?id=ID
+    let match = fileUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    match = fileUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    return null;
   }
+  async downloadImageFromUrl(
+    fileUrl: string
+  ): Promise<{ name: string; buffer: Buffer; mimeType?: string  }> {
+    const fileId = this.extractFileId(fileUrl);
+    if (!fileId) throw new Error("Invalid file URL");
 
-  async downloadImagesFromFolder(folderUrl: string): Promise<{ name: string; buffer: Buffer }[]> {
-    const folderId = this.extractFolderId(folderUrl);
-    if (!folderId) throw new Error("Invalid folder URL");
-
-    // Listar archivos en la carpeta
-    const filesRes = await this.drive.files.list({
-      q: `'${folderId}' in parents and trashed=false`,
-      fields: "files(id, name, mimeType)",
+    const meta = await this.drive.files.get({
+      fileId,
+      fields: "name, mimeType",
     });
 
-    const files = filesRes.data.files || [];
-    const images: { name: string; buffer: Buffer }[] = [];
+    const res = await this.drive.files.get(
+      { fileId, alt: "media" },
+      { responseType: "arraybuffer" }
+    );
 
-    for (const file of files) {
-      if (file.mimeType?.startsWith("image/")) {
-        const res = await this.drive.files.get(
-          { fileId: file.id!, alt: "media" },
-          { responseType: "arraybuffer" }
-        );
-        images.push({ name: file.name!, buffer: Buffer.from(res.data as ArrayBuffer) });
-      }
-    }
-    return images;
+    return {
+      name: meta.data.name || "image",
+      buffer: Buffer.from(res.data as ArrayBuffer),
+      mimeType: meta.data.mimeType,
+    };
   }
 }
