@@ -6,22 +6,23 @@ provider:
   runtime: nodejs18.x
   region: us-east-1
   environment:
-    SUPABASE_URL: ${env:SUPABASE_URL}
-    SUPABASE_KEY: ${env:SUPABASE_KEY}
     STAGE: ${opt:stage, 'dev'} # Agregar variable de entorno para el stage
     IS_OFFLINE: ${opt:isOffline, 'false'}
-    GOOGLE_TYPE: ${env:GOOGLE_TYPE}
-    GOOGLE_PROJECT_ID: ${env:GOOGLE_PROJECT_ID}
-    GOOGLE_PRIVATE_KEY_ID: ${env:GOOGLE_PRIVATE_KEY_ID}
-    GOOGLE_PRIVATE_KEY: ${env:GOOGLE_PRIVATE_KEY}
-    GOOGLE_CLIENT_EMAIL: ${env:GOOGLE_CLIENT_EMAIL}
-    GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID}
-    GOOGLE_AUTH_URI: ${env:GOOGLE_AUTH_URI}
-    GOOGLE_TOKEN_URI: ${env:GOOGLE_TOKEN_URI}
-    GOOGLE_AUTH_PROVIDER_CERT_URL: ${env:GOOGLE_AUTH_PROVIDER_CERT_URL}
-    GOOGLE_CLIENT_CERT_URL: ${env:GOOGLE_CLIENT_CERT_URL}
-    GOOGLE_UNIVERSE_DOMAIN: ${env:GOOGLE_UNIVERSE_DOMAIN}
-    SHARED_FOLDER_EMAIL: ${env:SHARED_FOLDER_EMAIL}
+
+    iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+          Resource: arn:aws:ssm:us-east-1:*:parameter/myapp/GOOGLE_*
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+          Resource: arn:aws:ssm:us-east-1:*:parameter/myapp/SHARED_FOLDER_EMAIL
+ 
 
 apiGateway:
 binaryMediaTypes:

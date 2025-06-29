@@ -1,32 +1,34 @@
-import { google } from 'googleapis';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
-import { IUploadImagesRepository } from '../../domain/repositories/IUploadImagesRepository';
-import { fileTypeFromBuffer } from 'file-type';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { google } from "googleapis";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { IUploadImagesRepository } from "../../domain/repositories/IUploadImagesRepository";
+import { fileTypeFromBuffer } from "file-type";
+import { getGoogleSecrets } from "./helperGoogleSecrets";
+
 
 export class UploadImagesRepository implements IUploadImagesRepository {
   private drive;
 
+  private secrets: Record<string, string> | null = null;
 
-
-  constructor() {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        type: process.env.GOOGLE_TYPE,
-        project_id: process.env.GOOGLE_PROJECT_ID,
-        private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'), 
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        universe_domain: process.env.GOOGLE_UNIVERSE_DOMAIN,
-      }, 
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
-
-    this.drive = google.drive({ version: 'v3', auth });
+  private async init() {
+    if (!this.secrets) {
+    this.secrets = await getGoogleSecrets();
+      const auth = new google.auth.GoogleAuth({
+        credentials: {
+          type: this.secrets.GOOGLE_TYPE,
+          project_id: this.secrets.GOOGLE_PROJECT_ID,
+          private_key_id: this.secrets.GOOGLE_PRIVATE_KEY_ID,
+          private_key: this.secrets.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+          client_email: this.secrets.GOOGLE_CLIENT_EMAIL,
+          client_id: this.secrets.GOOGLE_CLIENT_ID,
+          universe_domain: this.secrets.GOOGLE_UNIVERSE_DOMAIN,
+        },
+        scopes: ["https://www.googleapis.com/auth/drive"],
+      });
+      this.drive = google.drive({ version: "v3", auth });
+    }
   }
 
   /**
@@ -39,28 +41,29 @@ export class UploadImagesRepository implements IUploadImagesRepository {
     images: { base64: string; name?: string }[],
     folderName: string
   ): Promise<string> {
+    await this.init();
     try {
       // Verificar si la carpeta existe, si no, crearla
       const folderId = await this.getOrCreateFolder(folderName);
-  
+
       const imageUrls: string[] = []; // Array para almacenar las URLs de las imágenes
-  
+
       for (const image of images) {
-        const buffer = Buffer.from(image.base64, 'base64');
-  
+        const buffer = Buffer.from(image.base64, "base64");
+
         const fileType = await fileTypeFromBuffer(buffer);
         if (!fileType) {
-          throw new Error('No se pudo determinar el tipo MIME del archivo.');
+          throw new Error("No se pudo determinar el tipo MIME del archivo.");
         }
-  
+
         const mimeType = fileType.mime;
         const extension = fileType.ext;
-  
+
         const name = image.name || `file-${Date.now()}.${extension}`;
-  
+
         const filePath = path.join(os.tmpdir(), name);
         fs.writeFileSync(filePath, buffer);
-  
+
         const file = await this.drive.files.create({
           requestBody: {
             name,
@@ -70,25 +73,25 @@ export class UploadImagesRepository implements IUploadImagesRepository {
             mimeType,
             body: fs.createReadStream(filePath),
           },
-          fields: 'id', // Obtener el ID del archivo creado
+          fields: "id", // Obtener el ID del archivo creado
         });
-  
+
         const fileId = file.data.id!;
         const fileUrl = `https://drive.google.com/uc?id=${fileId}`; // Generar la URL pública de la imagen
         imageUrls.push(fileUrl);
       }
-  
+
       // Hacer pública la carpeta (si no lo está ya)
       await this.drive.permissions.create({
         fileId: folderId,
-        requestBody: { type: 'anyone', role: 'reader' },
+        requestBody: { type: "anyone", role: "reader" },
       });
-  
+
       // Devolver las URLs concatenadas en un solo string
-      return imageUrls.join(','); // Concatenar las URLs con comas
+      return imageUrls.join(","); // Concatenar las URLs con comas
     } catch (error) {
-      console.error('Error uploading files:', error);
-      throw new Error('Error uploading files to Google Drive');
+      console.error("Error uploading files:", error);
+      throw new Error("Error uploading files to Google Drive");
     }
   }
   /**
@@ -98,11 +101,12 @@ export class UploadImagesRepository implements IUploadImagesRepository {
    * @returns El ID de la carpeta.
    */
   private async getOrCreateFolder(folderName: string): Promise<string> {
+    await this.init();
     try {
       // Buscar la carpeta por nombre
       const res = await this.drive.files.list({
         q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: 'files(id, name)',
+        fields: "files(id, name)",
       });
 
       if (res.data.files && res.data.files.length > 0) {
@@ -114,20 +118,23 @@ export class UploadImagesRepository implements IUploadImagesRepository {
       const folder = await this.drive.files.create({
         requestBody: {
           name: folderName,
-          mimeType: 'application/vnd.google-apps.folder',
+          mimeType: "application/vnd.google-apps.folder",
         },
-        fields: 'id',
+        fields: "id",
       });
 
       const folderId = folder.data.id!;
 
       // Compartir la carpeta con una cuenta personal
-      await this.shareFolderWithPersonalAccount(folderId,  process.env.SHARED_FOLDER_EMAIL!);
+      await this.shareFolderWithPersonalAccount(
+        folderId,
+        process.env.SHARED_FOLDER_EMAIL!
+      );
 
       return folderId;
     } catch (error) {
-      console.error('Error getting or creating folder:', error);
-      throw new Error('Error getting or creating folder in Google Drive');
+      console.error("Error getting or creating folder:", error);
+      throw new Error("Error getting or creating folder in Google Drive");
     }
   }
 
@@ -136,21 +143,25 @@ export class UploadImagesRepository implements IUploadImagesRepository {
    * @param folderId - El ID de la carpeta.
    * @param email - El correo electrónico de la cuenta personal.
    */
-  private async shareFolderWithPersonalAccount(folderId: string, email: string): Promise<void> {
+  private async shareFolderWithPersonalAccount(
+    folderId: string,
+    email: string
+  ): Promise<void> {
+    await this.init();
     try {
       await this.drive.permissions.create({
         fileId: folderId,
         requestBody: {
-          type: 'user', // Compartir con un usuario específico
-          role: 'writer', // Permisos: "writer" (Editor) o "reader" (Lector)
+          type: "user", // Compartir con un usuario específico
+          role: "writer", // Permisos: "writer" (Editor) o "reader" (Lector)
           emailAddress: email, // Correo de la cuenta personal
         },
       });
 
       console.log(`Folder shared successfully with ${email}`);
     } catch (error) {
-      console.error('Error sharing folder:', error);
-      throw new Error('Error sharing folder in Google Drive');
+      console.error("Error sharing folder:", error);
+      throw new Error("Error sharing folder in Google Drive");
     }
   }
 }

@@ -1,25 +1,28 @@
 import { IDownloadImagesFromFolder } from "../../domain/repositories/IDownloadImagesFromFolder";
 import { google } from "googleapis";
+import { getGoogleSecrets } from "./helperGoogleSecrets";
 
 export class DownloadImagesFromFolder implements IDownloadImagesFromFolder {
   private drive;
+  private secrets: Record<string, string> | null = null;
 
-  constructor(auth?: any) {
-    if (!auth) {
-      auth = new google.auth.GoogleAuth({
+  private async init() {
+    if (!this.secrets) {
+    this.secrets = await getGoogleSecrets();
+      const auth = new google.auth.GoogleAuth({
         credentials: {
-          type: process.env.GOOGLE_TYPE,
-          project_id: process.env.GOOGLE_PROJECT_ID,
-          private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-          private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-          client_email: process.env.GOOGLE_CLIENT_EMAIL,
-          client_id: process.env.GOOGLE_CLIENT_ID,
-          universe_domain: process.env.GOOGLE_UNIVERSE_DOMAIN,
+          type: this.secrets.GOOGLE_TYPE,
+          project_id: this.secrets.GOOGLE_PROJECT_ID,
+          private_key_id: this.secrets.GOOGLE_PRIVATE_KEY_ID,
+          private_key: this.secrets.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+          client_email: this.secrets.GOOGLE_CLIENT_EMAIL,
+          client_id: this.secrets.GOOGLE_CLIENT_ID,
+          universe_domain: this.secrets.GOOGLE_UNIVERSE_DOMAIN,
         },
         scopes: ["https://www.googleapis.com/auth/drive"],
       });
+      this.drive = google.drive({ version: "v3", auth });
     }
-    this.drive = google.drive({ version: "v3", auth });
   }
 
   private extractFileId(fileUrl: string): string | null {
@@ -35,6 +38,7 @@ export class DownloadImagesFromFolder implements IDownloadImagesFromFolder {
   async downloadImageFromUrl(
     fileUrl: string
   ): Promise<{ name: string; buffer: Buffer; mimeType?: string  }> {
+    await this.init();
     const fileId = this.extractFileId(fileUrl);
     if (!fileId) throw new Error("Invalid file URL");
 
