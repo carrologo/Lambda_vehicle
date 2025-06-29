@@ -9,20 +9,6 @@ provider:
     STAGE: ${opt:stage, 'dev'} # Agregar variable de entorno para el stage
     IS_OFFLINE: ${opt:isOffline, 'false'}
 
-    iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - ssm:GetParameter
-            - ssm:GetParameters
-          Resource: arn:aws:ssm:us-east-1:*:parameter/myapp/GOOGLE_*
-        - Effect: Allow
-          Action:
-            - ssm:GetParameter
-            - ssm:GetParameters
-          Resource: arn:aws:ssm:us-east-1:*:parameter/myapp/SHARED_FOLDER_EMAIL
- 
 
 apiGateway:
 binaryMediaTypes:
