@@ -1,15 +1,25 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { Vehicle } from "../../domain/entities/Vehicle";
 import { IVehicleRepository } from "../../domain/repositories/VehicleRepository";
+import { getGoogleSecrets } from "../google/helperGoogleSecrets";
 
 export class VehicleRepository implements IVehicleRepository {
-  private supabase = createClient(
-    process.env.SUPABASE_URL || "",
-    process.env.SUPABASE_KEY || ""
-  );
+  private secrets: Record<string, string> | null = null;
+  private supabase: SupabaseClient | null = null;
+
+  private async init() {
+    if (!this.secrets) {
+      this.secrets = await getGoogleSecrets();
+      this.supabase = createClient(
+        this.secrets.SUPABASE_URL,
+        this.secrets.SUPABASE_KEY
+      );
+    }
+  }
 
   async save(vehicle: Vehicle): Promise<Vehicle> {
-    const { error } = await this.supabase
+    await this.init();
+    const { error } = await this.supabase!
       .from("vehicle")
       .insert(vehicle)
       .select()
@@ -24,7 +34,8 @@ export class VehicleRepository implements IVehicleRepository {
   }
 
   async findById(id: number): Promise<Vehicle | null> {
-    const { data, error } = await this.supabase
+    await this.init();
+    const { data, error } = await this.supabase!
       .from("vehicle")
       .select("*")
       .eq("id", id)
@@ -49,7 +60,8 @@ export class VehicleRepository implements IVehicleRepository {
   }
 
   async update(id: number, vehicleData: Partial<Vehicle>): Promise<Vehicle> {
-    const { data, error } = await this.supabase
+    await this.init();
+    const { data, error } = await this.supabase!
       .from("vehicle")
       .update(vehicleData)
       .eq("id", id)
@@ -89,9 +101,10 @@ export class VehicleRepository implements IVehicleRepository {
       total: number;
     };
   }> {
+    await this.init();
     const { findBy, value, orderBy, isAsc, page = 1, limit = 10 } = queryParams;
   
-    let query = this.supabase.from("vehicle").select("*", { count: "exact" });
+    let query = this.supabase!.from("vehicle").select("*", { count: "exact" });
   
     if (findBy && value) {
       query = query.ilike(findBy, `%${value}%`); 
