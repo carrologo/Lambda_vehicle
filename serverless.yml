@@ -13,8 +13,8 @@ plugins:
   - serverless-offline
 
 functions:
-  createClient:
-    name: createClient
+  lambda-transaction:
+    name: lambda_transaction
     handler: src/infrastructure/lambdas/handler.handler
     events:
       - http:
