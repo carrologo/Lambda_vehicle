@@ -14,7 +14,6 @@ export class UpdateVehicle {
         throw new Error(`Vehicle with ID ${id} not found`);
       }
 
-      // Update the vehicle in the repository
       return await this.vehicleRepository.update(id, vehicleData);
     } catch (error) {
       if (error instanceof ValidationError) {

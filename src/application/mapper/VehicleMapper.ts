@@ -1,5 +1,6 @@
 import { Vehicle } from "../../domain/entities/Vehicle";
 
+
 export class VehicleMapper {
     static toDomain(data: any): Vehicle {
         return new Vehicle({
@@ -16,5 +17,6 @@ export class VehicleMapper {
         seat_material: data.seatMaterial,
         airbags: data.airbags,
         images: data.images,
+        documents: data.documents
         });
     }}

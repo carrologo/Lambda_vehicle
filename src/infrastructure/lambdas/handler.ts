@@ -10,13 +10,16 @@ import { corsResponse } from "./CorsResponse";
 import { UploadImagesRepository } from "../google/UploadImagesRepository";
 import { GetImages } from "../../application/use-cases/GetImages";
 import { DownloadImagesFromFolder } from "../google/DownloadImagesFromFolder";
+import { DocumentHttpRepository } from "../api/DocumentHttpRepository";
 
 const vehicleRepository = new VehicleRepository();
 const downloadAllImagesFromFolder = new DownloadImagesFromFolder();
 const uploadImagesRepository = new UploadImagesRepository();
+const documentRepository = new DocumentHttpRepository(); // Assuming you have a DocumentHttpRepository
 const createVehicle = new CreateVehicle(
   vehicleRepository,
-  uploadImagesRepository
+  uploadImagesRepository,
+  documentRepository
 );
 const getAllVehicles = new GetAllVehicles(vehicleRepository);
 const detailVehicle = new DetailVehicle(vehicleRepository);
