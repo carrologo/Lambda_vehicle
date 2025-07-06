@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { Vehicle } from "../../domain/entities/Vehicle";
 import { IVehicleRepository } from "../../domain/repositories/VehicleRepository";
 import { getGoogleSecrets } from "../google/helperGoogleSecrets";
+import { VehicleEntity } from "./entities/VehicleEntity";
 
 export class VehicleRepository implements IVehicleRepository {
   private secrets: Record<string, string> | null = null;
@@ -17,9 +18,9 @@ export class VehicleRepository implements IVehicleRepository {
     }
   }
 
-  async save(vehicle: Vehicle): Promise<Vehicle> {
+  async save(vehicle: VehicleEntity): Promise<VehicleEntity> {
     await this.init();
-    const { error } = await this.supabase!
+    const { error, data } = await this.supabase!
       .from("vehicle")
       .insert(vehicle)
       .select()
@@ -30,7 +31,7 @@ export class VehicleRepository implements IVehicleRepository {
       throw new Error(error.message);
     }
 
-    return vehicle;
+    return data as VehicleEntity;
   }
 
   async findById(id: number): Promise<Vehicle | null> {

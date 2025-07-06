@@ -1,4 +1,5 @@
 import { ValidationError } from "./errors/ValidationError";
+import { Document } from "./Document";
 
 export interface IVehicle {
   id?: number;
@@ -16,7 +17,9 @@ export interface IVehicle {
   airbags?: boolean;
   images?: Images[]; 
   url_images?: string;
-  allImages?: string[]; // Cambiado a string[] para almacenar URLs de imágenes
+  allImages?: string[];
+  isSendDocuments?: boolean;
+  documents?: Document[];
 
 }
 
@@ -42,7 +45,9 @@ export class Vehicle implements IVehicle {
   airbags?: boolean;
   images?: Images[];
   url_images?: string;
-  allImages?: string[]; // Cambiado a string[] para almacenar URLs de imágenes
+  allImages?: string[];
+  isSendDocuments?: boolean = false;
+  documents?: Document[];// Cambiado a string[] para almacenar URLs de imágenes
 
   constructor(data: IVehicle) {
     this.id = data.id;
@@ -60,7 +65,9 @@ export class Vehicle implements IVehicle {
     this.airbags = data.airbags;
     this.images = data.images;
     this.url_images = data.url_images;
-    this.allImages = data.allImages; // Cambiado a string[] para almacenar URLs de imágenes
+    this.allImages = data.allImages;
+    this.documents = data.documents;
+    this.isSendDocuments = data.isSendDocuments ?? false;
 
     this.validate();
   }

@@ -14,15 +14,23 @@ export async function getGoogleSecrets(): Promise<Record<string, string>> {
     '/myapp/SHARED_FOLDER_EMAIL',
     '/myapp/SUPABASE_URL',
     '/myapp/SUPABASE_KEY',
+    '/myapp/DOCUMENTS_API_URL',
   ];
 
-  const result = await ssm.getParameters({
-    Names: paramNames,
-    WithDecryption: true
-  }).promise();
+  const chunkSize = 10;
+  let allParams: AWS.SSM.Parameter[] = [];
+
+  for (let i = 0; i < paramNames.length; i += chunkSize) {
+    const chunk = paramNames.slice(i, i + chunkSize);
+    const result = await ssm.getParameters({
+      Names: chunk,
+      WithDecryption: true
+    }).promise();
+    allParams = allParams.concat(result.Parameters || []);
+  }
 
   const secrets: Record<string, string> = {};
-  result.Parameters?.forEach(param => {
+  allParams.forEach(param => {
     const key = param.Name?.split('/').pop()!;
     secrets[key] = param.Value!;
   });

@@ -19,6 +19,7 @@
     "@types/node": "^22.14.1",
     "aws-sdk": "^2.1692.0",
     "aws-serverless-express": "^3.4.0",
+    "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.x.x",
     "express": "^5.1.0",
