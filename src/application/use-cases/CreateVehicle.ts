@@ -13,31 +13,42 @@ export class CreateVehicle {
 
   async execute(vehicle: Vehicle): Promise<string> {
     try {
+      // Guardar referencia a documentos antes de limpiar el objeto
+      const documentsToSave = vehicle.documents;
+      
+      // Subir imágenes si existen
       if (vehicle.images && vehicle.images.length > 0) {
         const urlImages = await this.uploadImagesRepository.uploadImages(
-          vehicle.images || [],
+          vehicle.images,
           `vehicles/${vehicle.brand}/${vehicle.line}/${vehicle.model}`
         );
 
-        if (urlImages.length === 0) {
+        if (!urlImages) {
           throw new Error("No se pudieron subir las imágenes.");
-        } else {
-          vehicle.url_images = urlImages;
-          delete vehicle.images;
-          delete vehicle.allImages;
-          await this.vehicleRepository.save(
-            VehicleEntittyMapper.toEntity(vehicle)
-          );
         }
+        
+        vehicle.url_images = urlImages;
+        delete vehicle.images;
       }
+      
+      // Limpiar propiedades no necesarias para la DB
       delete vehicle.allImages;
+      delete vehicle.documents; // No queremos guardar documentos en la tabla vehicle
+      
+      // Guardar vehículo y obtener el ID
       const savedEntity = await this.vehicleRepository.save(
         VehicleEntittyMapper.toEntity(vehicle)
       );
+      
       const vehicleId = savedEntity.id;
+      
+      if (!vehicleId) {
+        throw new Error("No se pudo obtener el ID del vehículo guardado.");
+      }
 
-      if (vehicle.documents && vehicle.documents.length > 0 && vehicleId) {
-        for (const doc of vehicle.documents) {
+      // Enviar documentos si existen
+      if (documentsToSave && documentsToSave.length > 0) {
+        for (const doc of documentsToSave) {
           doc.idVehicle = vehicleId;
           await this.documentRepository.save(doc);
         }
@@ -46,7 +57,7 @@ export class CreateVehicle {
       return "El vehículo fue ingresado correctamente.";
     } catch (error) {
       throw new Error(
-        `Failed to creat Vehicle: ${
+        `Failed to create Vehicle: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );

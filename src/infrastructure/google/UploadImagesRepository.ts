@@ -87,8 +87,8 @@ export class UploadImagesRepository implements IUploadImagesRepository {
         requestBody: { type: "anyone", role: "reader" },
       });
 
-      // Devolver las URLs concatenadas en un solo string
-      return imageUrls.join(","); // Concatenar las URLs con comas
+      // Devolver la URL pública de la carpeta donde están las imágenes
+      return `https://drive.google.com/drive/folders/${folderId}`;
     } catch (error) {
       console.error("Error uploading files:", error);
       throw new Error("Error uploading files to Google Drive");
@@ -128,7 +128,7 @@ export class UploadImagesRepository implements IUploadImagesRepository {
       // Compartir la carpeta con una cuenta personal
       await this.shareFolderWithPersonalAccount(
         folderId,
-        process.env.SHARED_FOLDER_EMAIL!
+        this.secrets!.SHARED_FOLDER_EMAIL
       );
 
       return folderId;
@@ -138,11 +138,6 @@ export class UploadImagesRepository implements IUploadImagesRepository {
     }
   }
 
-  /**
-   * Comparte una carpeta con una cuenta personal.
-   * @param folderId - El ID de la carpeta.
-   * @param email - El correo electrónico de la cuenta personal.
-   */
   private async shareFolderWithPersonalAccount(
     folderId: string,
     email: string
