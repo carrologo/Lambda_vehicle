@@ -15,6 +15,7 @@ export async function getGoogleSecrets(): Promise<Record<string, string>> {
     '/myapp/SUPABASE_URL',
     '/myapp/SUPABASE_KEY',
     '/myapp/DOCUMENTS_API_URL',
+    '/myapp/DEBTS_API_URL',
   ];
 
   const chunkSize = 10;

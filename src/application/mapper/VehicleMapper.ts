@@ -18,6 +18,7 @@ export class VehicleMapper {
         airbags: data.airbags,
         images: data.images,
         documents: data.documents,
+        debts: data.debts,
         plate: data.plate
         });
     }}
