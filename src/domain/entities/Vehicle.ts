@@ -1,5 +1,6 @@
 import { ValidationError } from "./errors/ValidationError";
 import { Document } from "./Document";
+import { Debt } from "./Debt";
 
 export interface IVehicle {
   id?: number;
@@ -15,20 +16,19 @@ export interface IVehicle {
   displacement?: number;
   seat_material?: string;
   airbags?: boolean;
-  images?: Images[]; 
+  images?: Images[];
   url_images?: string;
   allImages?: string[];
   isSendDocuments?: boolean;
   plate?: string;
   documents?: Document[];
-
+  debts?: Debt[];
 }
 
-
- export interface Images {
+export interface Images {
   base64: string;
   name: string;
- }
+}
 
 export class Vehicle implements IVehicle {
   id?: number;
@@ -49,6 +49,7 @@ export class Vehicle implements IVehicle {
   allImages?: string[];
   isSendDocuments?: boolean = false;
   documents?: Document[];
+  debts?: Debt[];
   plate?: string;
 
   constructor(data: IVehicle) {
@@ -69,6 +70,7 @@ export class Vehicle implements IVehicle {
     this.url_images = data.url_images;
     this.allImages = data.allImages;
     this.documents = data.documents;
+    this.debts = data.debts;
     this.isSendDocuments = data.isSendDocuments ?? false;
     this.plate = data.plate;
 
@@ -79,13 +81,41 @@ export class Vehicle implements IVehicle {
     const errors: { field: string; message: string }[] = [];
 
     const rules = [
-      { field: "type", isValid: !!this.type, message: "This field is required." },
-      { field: "brand", isValid: !!this.brand, message: "This field is required." },
-      { field: "line", isValid: !!this.line, message: "This field is required." },
-      { field: "fuel_type", isValid: !!this.fuel_type, message: "This field is required." },
-      { field: "kms", isValid: this.kms !== undefined && this.kms !== null, message: "This field is required." },
-      { field: "model", isValid: !!this.model, message: "This field is required." },
-      { field: "kms", isValid: this.kms >= 0, message: "Kilometraje no puede ser negativo." },
+      {
+        field: "type",
+        isValid: !!this.type,
+        message: "This field is required.",
+      },
+      {
+        field: "brand",
+        isValid: !!this.brand,
+        message: "This field is required.",
+      },
+      {
+        field: "line",
+        isValid: !!this.line,
+        message: "This field is required.",
+      },
+      {
+        field: "fuel_type",
+        isValid: !!this.fuel_type,
+        message: "This field is required.",
+      },
+      {
+        field: "kms",
+        isValid: this.kms !== undefined && this.kms !== null,
+        message: "This field is required.",
+      },
+      {
+        field: "model",
+        isValid: !!this.model,
+        message: "This field is required.",
+      },
+      {
+        field: "kms",
+        isValid: this.kms >= 0,
+        message: "Kilometraje no puede ser negativo.",
+      },
     ];
 
     rules.forEach((rule) => {

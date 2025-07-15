@@ -19,6 +19,7 @@ export class VehicleRepository implements IVehicleRepository {
   }
 
   async save(vehicle: VehicleEntity): Promise<VehicleEntity> {
+    console.log("Saving vehicle:", vehicle);
     await this.init();
     const { error, data } = await this.supabase!
       .from("vehicle")

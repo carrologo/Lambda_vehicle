@@ -11,15 +11,18 @@ import { UploadImagesRepository } from "../google/UploadImagesRepository";
 import { GetImages } from "../../application/use-cases/GetImages";
 import { DownloadImagesFromFolder } from "../google/DownloadImagesFromFolder";
 import { DocumentHttpRepository } from "../api/DocumentHttpRepository";
+import { DebtHttpRepository } from "../api/DebtHttpRepository";
 
 const vehicleRepository = new VehicleRepository();
 const downloadAllImagesFromFolder = new DownloadImagesFromFolder();
 const uploadImagesRepository = new UploadImagesRepository();
-const documentRepository = new DocumentHttpRepository(); // Assuming you have a DocumentHttpRepository
+const documentRepository = new DocumentHttpRepository();
+const debtRepository = new DebtHttpRepository();
 const createVehicle = new CreateVehicle(
   vehicleRepository,
   uploadImagesRepository,
-  documentRepository
+  documentRepository,
+  debtRepository
 );
 const getAllVehicles = new GetAllVehicles(vehicleRepository);
 const detailVehicle = new DetailVehicle(vehicleRepository);
