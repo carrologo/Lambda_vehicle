@@ -19,6 +19,7 @@ export interface IVehicle {
   url_images?: string;
   allImages?: string[];
   isSendDocuments?: boolean;
+  plate?: string;
   documents?: Document[];
 
 }
@@ -47,7 +48,8 @@ export class Vehicle implements IVehicle {
   url_images?: string;
   allImages?: string[];
   isSendDocuments?: boolean = false;
-  documents?: Document[];// Cambiado a string[] para almacenar URLs de imágenes
+  documents?: Document[];
+  plate?: string;
 
   constructor(data: IVehicle) {
     this.id = data.id;
@@ -68,6 +70,7 @@ export class Vehicle implements IVehicle {
     this.allImages = data.allImages;
     this.documents = data.documents;
     this.isSendDocuments = data.isSendDocuments ?? false;
+    this.plate = data.plate;
 
     this.validate();
   }

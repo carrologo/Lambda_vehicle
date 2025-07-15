@@ -17,6 +17,7 @@ export class VehicleMapper {
         seat_material: data.seatMaterial,
         airbags: data.airbags,
         images: data.images,
-        documents: data.documents
+        documents: data.documents,
+        plate: data.plate
         });
     }}
