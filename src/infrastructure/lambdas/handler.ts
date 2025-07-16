@@ -12,11 +12,21 @@ import { GetImages } from "../../application/use-cases/GetImages";
 import { DownloadImagesFromFolder } from "../google/DownloadImagesFromFolder";
 import { DocumentHttpRepository } from "../api/DocumentHttpRepository";
 import { DebtHttpRepository } from "../api/DebtHttpRepository";
+import { DocumentSupabaseRepository } from "../database/DocumentSupabaseRepository";
+import { DebtSupabaseRepository } from "../database/DebtSupabaseRepository";
 
 const vehicleRepository = new VehicleRepository();
 const downloadAllImagesFromFolder = new DownloadImagesFromFolder();
+
 const uploadImagesRepository = new UploadImagesRepository();
 const documentRepository = new DocumentHttpRepository();
+
+
+
+const documentRepositoryDb = new DocumentSupabaseRepository();
+const debtRepositoryDb = new DebtSupabaseRepository();
+
+
 const debtRepository = new DebtHttpRepository();
 const createVehicle = new CreateVehicle(
   vehicleRepository,
@@ -24,9 +34,14 @@ const createVehicle = new CreateVehicle(
   documentRepository,
   debtRepository
 );
-const getAllVehicles = new GetAllVehicles(vehicleRepository);
+
+const getAllVehicles = new GetAllVehicles(
+  vehicleRepository,
+  documentRepositoryDb, // Este debe ser DocumentSupabaseRepository
+  debtRepositoryDb     // Este debe ser DebtSupabaseRepository
+);
 const detailVehicle = new DetailVehicle(vehicleRepository);
-const updateVehicle = new UpdateVehicle(vehicleRepository);
+const updateVehicle = new UpdateVehicle(vehicleRepository,documentRepository, debtRepository);
 
 const getImages = new GetImages(downloadAllImagesFromFolder);
 
@@ -372,6 +387,9 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       'seatMaterial',
       'airbags',
       'images',
+      'plate',
+      'documents',
+      'debts'
     ];
 
     // Check for invalid fields

@@ -19,7 +19,6 @@ export interface IVehicle {
   images?: Images[];
   url_images?: string;
   allImages?: string[];
-  isSendDocuments?: boolean;
   plate?: string;
   documents?: Document[];
   debts?: Debt[];
@@ -47,7 +46,6 @@ export class Vehicle implements IVehicle {
   images?: Images[];
   url_images?: string;
   allImages?: string[];
-  isSendDocuments?: boolean = false;
   documents?: Document[];
   debts?: Debt[];
   plate?: string;
@@ -71,7 +69,6 @@ export class Vehicle implements IVehicle {
     this.allImages = data.allImages;
     this.documents = data.documents;
     this.debts = data.debts;
-    this.isSendDocuments = data.isSendDocuments ?? false;
     this.plate = data.plate;
 
     this.validate();

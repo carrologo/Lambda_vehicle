@@ -30,4 +30,22 @@ export class DocumentHttpRepository implements IDocumentRepository {
       );
     }
   }
+
+  
+
+  async update(documentId: number, data: Partial<Document>): Promise<void> {
+    try {
+      const apiUrl = await this.getApiUrl();
+      await axios.patch(`${apiUrl}/documents/${documentId}`, data, {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error updating document:", error);
+      throw new Error(
+        `Failed to update document: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
 }
