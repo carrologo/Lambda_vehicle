@@ -11,7 +11,7 @@ export class DebtMapper {
     return {
       vehicle_id: debt.VehicleId!,
       amount: debt.amount,
-      type_debt_id: debt.TypeDebtId
+      type_debt_id: debt.TypeDebtId,
     };
   }
 }
