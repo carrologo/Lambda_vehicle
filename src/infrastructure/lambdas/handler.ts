@@ -297,24 +297,49 @@ async function handleUpdateVehicle(
       });
     }
 
-    // Transform the data to match the mapper's expected format
-    const transformedBody = {
-      ...parsedBody,
-      fuelType: parsedBody.fuel_type || existingVehicle.fuel_type,
-      seatMaterial: parsedBody.seat_material || existingVehicle.seat_material,
-    };
-
-    // Merge existing vehicle data with update data
+    // Merge existing vehicle data with update data, transforming API format to mapper format
     const updateData = {
       ...existingVehicle,
-      ...transformedBody,
-      // Ensure required fields are present from existing vehicle
+      // Basic fields (direct mapping)
       type: parsedBody.type || existingVehicle.type,
       brand: parsedBody.brand || existingVehicle.brand,
       line: parsedBody.line || existingVehicle.line,
-      fuel_type: parsedBody.fuel_type || existingVehicle.fuel_type,
       kms: parsedBody.kms ?? existingVehicle.kms,
       model: parsedBody.model || existingVehicle.model,
+
+      // Optional fields that can come from API
+      version: parsedBody.version || existingVehicle.version,
+      transmission: parsedBody.transmission || existingVehicle.transmission,
+      traction: parsedBody.traction || existingVehicle.traction,
+      displacement: parsedBody.displacement || existingVehicle.displacement,
+      airbags: parsedBody.airbags ?? existingVehicle.airbags,
+      plate: parsedBody.plate || existingVehicle.plate,
+
+      // Transform snake_case from API to camelCase for VehicleMapper
+      fuelType: parsedBody.fuel_type || existingVehicle.fuel_type,
+      seatMaterial: parsedBody.seat_material || existingVehicle.seat_material,
+
+      // Preserve other fields from parsedBody if they exist
+      ...Object.fromEntries(
+        Object.entries(parsedBody).filter(
+          ([key]) =>
+            ![
+              "fuel_type",
+              "seat_material",
+              "type",
+              "brand",
+              "line",
+              "kms",
+              "model",
+              "version",
+              "transmission",
+              "traction",
+              "displacement",
+              "airbags",
+              "plate",
+            ].includes(key)
+        )
+      ),
     };
 
     delete updateData.images; // Remove images from the update data if it exists
