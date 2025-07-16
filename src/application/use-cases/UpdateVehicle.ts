@@ -26,6 +26,8 @@ export class UpdateVehicle {
       const documentsToUpdate = vehicleData.documents;
       const debtsToUpdate = vehicleData.debts;
 
+      console.log("Vehicle data before transformation:", vehicleData);
+
       // Limpiar documentos y deudas del objeto vehicle antes de actualizar en BD
       delete vehicleData.documents;
       delete vehicleData.debts;
