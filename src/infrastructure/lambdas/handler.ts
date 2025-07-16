@@ -16,6 +16,8 @@ import { GetImages } from "../../application/use-cases/GetImages";
 import { DownloadImagesFromFolder } from "../google/DownloadImagesFromFolder";
 import { DocumentSupabaseRepository } from "../database/DocumentSupabaseRepository";
 import { DebtSupabaseRepository } from "../database/DebtSupabaseRepository";
+import { DebtHttpRepository } from "../api/DebtHttpRepository";
+import { DocumentHttpRepository } from "../api/DocumentHttpRepository";
 
 // Initialize repositories and use cases
 const vehicleRepository = new VehicleRepository();
@@ -25,6 +27,9 @@ const uploadImagesRepository = new UploadImagesRepository();
 // Use database repositories instead of HTTP repositories
 const documentRepositoryDb = new DocumentSupabaseRepository();
 const debtRepositoryDb = new DebtSupabaseRepository();
+
+const documentRepositoryHttp = new DocumentHttpRepository();
+const debtRepositoryHttp = new DebtHttpRepository();
 
 // Initialize use cases with proper repository injection
 const createVehicle = new CreateVehicle(
@@ -48,8 +53,8 @@ const detailVehicle = new DetailVehicle(
 
 const updateVehicle = new UpdateVehicle(
   vehicleRepository,
-  documentRepositoryDb, // Use database repository for consistency
-  debtRepositoryDb // Use database repository for consistency
+  documentRepositoryHttp, // Use database repository for consistency
+  debtRepositoryHttp // Use database repository for consistency
 );
 
 const getImages = new GetImages(downloadAllImagesFromFolder);
