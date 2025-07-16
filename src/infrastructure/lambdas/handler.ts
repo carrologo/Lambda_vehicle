@@ -1,4 +1,8 @@
-import { APIGatewayProxyHandler } from "aws-lambda";
+import {
+  APIGatewayProxyHandler,
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+} from "aws-lambda";
 import { VehicleRepository } from "../database/SupabaseVehicleRepository";
 import { CreateVehicle } from "../../application/use-cases/CreateVehicle";
 import { GetAllVehicles } from "../../application/use-cases/GetAllVehicles";
@@ -10,111 +14,120 @@ import { corsResponse } from "./CorsResponse";
 import { UploadImagesRepository } from "../google/UploadImagesRepository";
 import { GetImages } from "../../application/use-cases/GetImages";
 import { DownloadImagesFromFolder } from "../google/DownloadImagesFromFolder";
-import { DocumentHttpRepository } from "../api/DocumentHttpRepository";
-import { DebtHttpRepository } from "../api/DebtHttpRepository";
 import { DocumentSupabaseRepository } from "../database/DocumentSupabaseRepository";
 import { DebtSupabaseRepository } from "../database/DebtSupabaseRepository";
 
+// Initialize repositories and use cases
 const vehicleRepository = new VehicleRepository();
 const downloadAllImagesFromFolder = new DownloadImagesFromFolder();
-
 const uploadImagesRepository = new UploadImagesRepository();
-const documentRepository = new DocumentHttpRepository();
 
-
-
+// Use database repositories instead of HTTP repositories
 const documentRepositoryDb = new DocumentSupabaseRepository();
 const debtRepositoryDb = new DebtSupabaseRepository();
 
-
-const debtRepository = new DebtHttpRepository();
+// Initialize use cases with proper repository injection
 const createVehicle = new CreateVehicle(
   vehicleRepository,
   uploadImagesRepository,
-  documentRepository,
-  debtRepository
+  documentRepositoryDb, // Use database repository for consistency
+  debtRepositoryDb // Use database repository for consistency
 );
 
 const getAllVehicles = new GetAllVehicles(
   vehicleRepository,
-  documentRepositoryDb, // Este debe ser DocumentSupabaseRepository
-  debtRepositoryDb     // Este debe ser DebtSupabaseRepository
+  documentRepositoryDb,
+  debtRepositoryDb
 );
-const detailVehicle = new DetailVehicle(vehicleRepository);
-const updateVehicle = new UpdateVehicle(vehicleRepository,documentRepository, debtRepository);
+
+const detailVehicle = new DetailVehicle(
+  vehicleRepository,
+  documentRepositoryDb,
+  debtRepositoryDb
+);
+
+const updateVehicle = new UpdateVehicle(
+  vehicleRepository,
+  documentRepositoryDb, // Use database repository for consistency
+  debtRepositoryDb // Use database repository for consistency
+);
 
 const getImages = new GetImages(downloadAllImagesFromFolder);
 
-export const getImageFromVehicleHandler: APIGatewayProxyHandler = async (event) => {
+// Main handler that routes all requests
+export const main: APIGatewayProxyHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
   try {
-    const fileUrl = event.queryStringParameters?.id;
-    if (!fileUrl) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "File URL is required" }),
-      };
+    const {
+      httpMethod,
+      resource,
+      pathParameters,
+      queryStringParameters,
+      body,
+    } = event;
+
+    // Route based on method and path
+    switch (httpMethod) {
+      case "POST":
+        if (resource === "/vehicle") {
+          return await handleCreateVehicle(body);
+        }
+        break;
+
+      case "GET":
+        if (resource === "/vehicles") {
+          return await handleGetAllVehicles(queryStringParameters);
+        }
+        if (resource === "/vehicles/{id}") {
+          return await handleDetailVehicle(pathParameters?.id);
+        }
+        if (resource === "/image") {
+          return await handleGetImage(queryStringParameters?.id);
+        }
+        break;
+
+      case "PATCH":
+        if (resource === "/vehicles/{id}") {
+          return await handleUpdateVehicle(pathParameters?.id, body);
+        }
+        break;
+
+      default:
+        return corsResponse(405, {
+          error: {
+            code: "METHOD_NOT_ALLOWED",
+            message: `Method ${httpMethod} not allowed for resource ${resource}`,
+          },
+        });
     }
 
-    // Suponiendo que tu método también retorna mimeType:
-    const image = await getImages.execute(fileUrl); // { name, buffer, mimeType }
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": image.mimeType || "application/octet-stream",
-        "Content-Disposition": `inline; filename="${image.name}"`,
+    return corsResponse(404, {
+      error: {
+        code: "NOT_FOUND",
+        message: `Resource ${resource} not found`,
       },
-      body: image.buffer.toString("base64"),
-      isBase64Encoded: true,
-    };
+    });
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: error instanceof Error ? error.message : "An unknown error occurred",
-      }),
-    };
+    console.error("Unhandled error in main handler:", error);
+    return corsResponse(500, {
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "An unexpected error occurred",
+      },
+    });
   }
 };
 
-/**
- * @swagger
- * /vehicle:
- *   post:
- *     summary: Create a new vehicle
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               type:
- *                 type: string
- *               brand:
- *                 type: string
- *               line:
- *                 type: string
- *               fuel_type:
- *                 type: string
- *               kms:
- *                 type: number
- *               model:
- *                 type: string
- *                 format: date
- *     responses:
- *       201:
- *         description: Vehicle created successfully
- *       400:
- *         description: Validation error
- */
-
-export const createVehicleHandler: APIGatewayProxyHandler = async (event) => {
+// Handler functions for each endpoint
+async function handleCreateVehicle(
+  body: string | null
+): Promise<APIGatewayProxyResult> {
   try {
-    const body = JSON.parse(event.body || "{}");
-
-    const response = await createVehicle.execute(VehicleMapper.toDomain(body));
-
+    const parsedBody = JSON.parse(body || "{}");
+    const response = await createVehicle.execute(
+      VehicleMapper.toDomain(parsedBody)
+    );
     return corsResponse(201, { message: response });
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -126,90 +139,30 @@ export const createVehicleHandler: APIGatewayProxyHandler = async (event) => {
         },
       });
     }
-
     return corsResponse(500, {
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      error: {
+        code: "INTERNAL_ERROR",
+        message:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      },
     });
   }
-};
+}
 
-/**
- * @swagger
- * /vehicles:
- *   get:
- *     summary: Get all vehicles
- *     parameters:
- *       - in: query
- *         name: findBy
- *         schema:
- *           type: string
- *         description: Field to filter vehicles by (e.g., brand, type).
- *       - in: query
- *         name: value
- *         schema:
- *           type: string
- *         description: Value to filter vehicles by.
- *       - in: query
- *         name: orderBy
- *         schema:
- *           type: string
- *         description: Field to order vehicles by.
- *       - in: query
- *         name: isAsc
- *         schema:
- *           type: boolean
- *         description: Whether to sort in ascending order (default: true).
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Page number for pagination.
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Number of vehicles per page.
- *     responses:
- *       200:
- *         description: List of vehicles with pagination
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Vehicle'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     totalItems:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
- *                     currentPage:
- *                       type: integer
- *                     itemsPerPage:
- *                       type: integer
- *       500:
- *         description: Internal server error
- */
-export const getAllVehiclesHandler: APIGatewayProxyHandler = async (event) => {
+async function handleGetAllVehicles(
+  queryStringParameters: any
+): Promise<APIGatewayProxyResult> {
   try {
     const queryParams = {
-      findBy: event.queryStringParameters?.findBy,
-      value: event.queryStringParameters?.value,
-      orderBy: event.queryStringParameters?.orderBy,
-      isAsc: event.queryStringParameters?.isAsc === "false" ? false : true,
-      page: event.queryStringParameters?.page
-        ? parseInt(event.queryStringParameters.page, 10)
+      findBy: queryStringParameters?.findBy,
+      value: queryStringParameters?.value,
+      orderBy: queryStringParameters?.orderBy,
+      isAsc: queryStringParameters?.isAsc !== "false",
+      page: queryStringParameters?.page
+        ? parseInt(queryStringParameters.page, 10)
         : 1,
-      limit: event.queryStringParameters?.limit
-        ? parseInt(event.queryStringParameters.limit, 10)
+      limit: queryStringParameters?.limit
+        ? parseInt(queryStringParameters.limit, 10)
         : 50,
     };
 
@@ -217,41 +170,22 @@ export const getAllVehiclesHandler: APIGatewayProxyHandler = async (event) => {
     return corsResponse(200, { data, pagination });
   } catch (error) {
     return corsResponse(500, {
-      message:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      error: {
+        code: "INTERNAL_ERROR",
+        message:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      },
     });
   }
-};
+}
 
-/**
- * @swagger
- * /vehicle/{id}:
- *   get:
- *     summary: Get vehicle details by ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the vehicle to retrieve
- *     responses:
- *       200:
- *         description: Vehicle details retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Vehicle'
- *       404:
- *         description: Vehicle not found
- *       500:
- *         description: Internal server error
- */
-export const detailVehicleHandler: APIGatewayProxyHandler = async (event) => {
+async function handleDetailVehicle(
+  id: string | undefined
+): Promise<APIGatewayProxyResult> {
   try {
-    const id = parseInt(event.pathParameters?.id || "0", 10);
+    const vehicleId = parseInt(id || "0", 10);
 
-    if (isNaN(id) || id <= 0) {
+    if (isNaN(vehicleId) || vehicleId <= 0) {
       return corsResponse(400, {
         error: {
           code: "INVALID_ID",
@@ -260,7 +194,7 @@ export const detailVehicleHandler: APIGatewayProxyHandler = async (event) => {
       });
     }
 
-    const vehicle = await detailVehicle.execute(id);
+    const vehicle = await detailVehicle.execute(vehicleId);
     return corsResponse(200, vehicle);
   } catch (error) {
     if (error instanceof Error && error.message.includes("not found")) {
@@ -280,67 +214,16 @@ export const detailVehicleHandler: APIGatewayProxyHandler = async (event) => {
       },
     });
   }
-};
+}
 
-/**
- * @swagger
- * /vehicle/{id}:
- *   put:
- *     summary: Update a vehicle by ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the vehicle to update
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               type:
- *                 type: string
- *               brand:
- *                 type: string
- *               line:
- *                 type: string
- *               version:
- *                 type: string
- *               transmission:
- *                 type: string
- *               traction:
- *                 type: string
- *               fuel_type:
- *                 type: string
- *               kms:
- *                 type: number
- *               model:
- *                 type: string
- *                 format: date
- *               displacement:
- *                 type: number
- *               seat_material:
- *                 type: string
- *               airbags:
- *                 type: boolean
- *     responses:
- *       200:
- *         description: Vehicle updated successfully
- *       400:
- *         description: Validation error
- *       404:
- *         description: Vehicle not found
- *       500:
- *         description: Internal server error
- */
-export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
+async function handleUpdateVehicle(
+  id: string | undefined,
+  body: string | null
+): Promise<APIGatewayProxyResult> {
   try {
-    const id = parseInt(event.pathParameters?.id || "0", 10);
-    
-    if (isNaN(id) || id <= 0) {
+    const vehicleId = parseInt(id || "0", 10);
+
+    if (isNaN(vehicleId) || vehicleId <= 0) {
       return corsResponse(400, {
         error: {
           code: "INVALID_ID",
@@ -350,20 +233,20 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
     }
 
     // First check if the vehicle exists
-    const existingVehicle = await vehicleRepository.findById(id);
+    const existingVehicle = await vehicleRepository.findById(vehicleId);
     if (!existingVehicle) {
       return corsResponse(404, {
         error: {
           code: "VEHICLE_NOT_FOUND",
-          message: `Vehicle with ID ${id} not found`,
+          message: `Vehicle with ID ${vehicleId} not found`,
         },
       });
     }
 
-    const body = JSON.parse(event.body || "{}");
-    
+    const parsedBody = JSON.parse(body || "{}");
+
     // Validate that at least one field is being updated
-    if (Object.keys(body).length === 0) {
+    if (Object.keys(parsedBody).length === 0) {
       return corsResponse(400, {
         error: {
           code: "VALIDATION_ERROR",
@@ -374,44 +257,46 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
 
     // List of valid vehicle fields
     const validFields = [
-      'type',
-      'brand',
-      'line',
-      'version',
-      'transmission',
-      'traction',
-      'fuelType',
-      'kms',
-      'model',
-      'displacement',
-      'seatMaterial',
-      'airbags',
-      'images',
-      'plate',
-      'documents',
-      'debts'
+      "type",
+      "brand",
+      "line",
+      "version",
+      "transmission",
+      "traction",
+      "fuelType",
+      "kms",
+      "model",
+      "displacement",
+      "seatMaterial",
+      "airbags",
+      "images",
+      "plate",
+      "documents",
+      "debts",
     ];
 
     // Check for invalid fields
-    const invalidFields = Object.keys(body).filter(field => !validFields.includes(field));
+    const invalidFields = Object.keys(parsedBody).filter(
+      (field) => !validFields.includes(field)
+    );
     if (invalidFields.length > 0) {
       return corsResponse(400, {
         error: {
           code: "INVALID_FIELDS",
           message: "Invalid fields provided",
-          details: invalidFields.map(field => ({
+          details: invalidFields.map((field) => ({
             field,
-            message: `Field '${field}' is not a valid vehicle field`
-          }))
-        }
+            message: `Field '${field}' is not a valid vehicle field`,
+          })),
+        },
       });
     }
 
     // Transform the data to match the mapper's expected format
     const transformedBody = {
-      ...body,
-      fuelType: body.fuel_type || existingVehicle.fuel_type,
-      seatMaterial: body.seat_material || existingVehicle.seat_material,
+      ...parsedBody,
+      fuelType: parsedBody.fuel_type || existingVehicle.fuel_type,
+      seatMaterial: parsedBody.seat_material || existingVehicle.seat_material,
     };
 
     // Merge existing vehicle data with update data
@@ -419,18 +304,18 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       ...existingVehicle,
       ...transformedBody,
       // Ensure required fields are present from existing vehicle
-      type: body.type || existingVehicle.type,
-      brand: body.brand || existingVehicle.brand,
-      line: body.line || existingVehicle.line,
-      fuel_type: body.fuel_type || existingVehicle.fuel_type,
-      kms: body.kms ?? existingVehicle.kms,
-      model: body.model || existingVehicle.model,
+      type: parsedBody.type || existingVehicle.type,
+      brand: parsedBody.brand || existingVehicle.brand,
+      line: parsedBody.line || existingVehicle.line,
+      fuel_type: parsedBody.fuel_type || existingVehicle.fuel_type,
+      kms: parsedBody.kms ?? existingVehicle.kms,
+      model: parsedBody.model || existingVehicle.model,
     };
 
     delete updateData.images; // Remove images from the update data if it exists
 
     const vehicleData = VehicleMapper.toDomain(updateData);
-    const updatedVehicle = await updateVehicle.execute(id, vehicleData);
+    const updatedVehicle = await updateVehicle.execute(vehicleId, vehicleData);
     return corsResponse(200, updatedVehicle);
   } catch (error) {
     if (error instanceof ValidationError) {
@@ -460,4 +345,42 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       },
     });
   }
-};
+}
+
+async function handleGetImage(
+  fileUrl: string | undefined
+): Promise<APIGatewayProxyResult> {
+  try {
+    if (!fileUrl) {
+      return corsResponse(400, {
+        error: {
+          code: "MISSING_PARAMETER",
+          message: "File URL is required",
+        },
+      });
+    }
+
+    const image = await getImages.execute(fileUrl);
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": image.mimeType || "application/octet-stream",
+        "Content-Disposition": `inline; filename="${image.name}"`,
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PATCH",
+      },
+      body: image.buffer.toString("base64"),
+      isBase64Encoded: true,
+    };
+  } catch (error) {
+    return corsResponse(500, {
+      error: {
+        code: "INTERNAL_ERROR",
+        message:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      },
+    });
+  }
+}

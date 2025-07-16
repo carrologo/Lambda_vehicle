@@ -48,6 +48,28 @@ export class DebtSupabaseRepository implements IDebtRepository {
     );
   }
 
+  async getByVehicleIds(vehicleIds: number[]): Promise<Debt[]> {
+    await this.init();
+    
+    if (vehicleIds.length === 0) {
+      return [];
+    }
+
+    const { data, error } = await this.supabase!.from("vehicle_debt")
+      .select("*")
+      .in("vehicle_id", vehicleIds);
+
+    if (error) {
+      console.error("Error fetching debts:", error);
+      return [];
+    }
+
+    return (data || []).map(
+      (item: any) =>
+        new Debt(item.amount, item.type_debt_id, item.vehicle_id, item.id)
+    );
+  }
+
   async update(debtId: number, data: Partial<Debt>): Promise<void> {
     await this.init();
     const updateData: any = {};

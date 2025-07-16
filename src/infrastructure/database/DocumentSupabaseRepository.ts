@@ -86,6 +86,46 @@ export class DocumentSupabaseRepository implements IDocumentRepository {
     );
   }
 
+  async getByVehicleIds(vehicleIds: number[]): Promise<Document[]> {
+    await this.init();
+    
+    if (vehicleIds.length === 0) {
+      return [];
+    }
+
+    const { data, error } = await this.supabase!.from("vehicle_document")
+      .select(
+        `
+        id,
+        document_id,
+        vehicle_id,
+        document (
+          id,
+          expiration_date,
+          category,
+          document_type_id
+        )
+      `
+      )
+      .in("vehicle_id", vehicleIds);
+
+    if (error) {
+      console.error("Error fetching documents:", error);
+      return [];
+    }
+
+    return (data || []).map(
+      (item: any) =>
+        new Document(
+          new Date(item.document.expiration_date),
+          item.document.document_type_id,
+          item.vehicle_id,
+          item.document.category,
+          item.document.id
+        )
+    );
+  }
+
   async update(documentId: number, data: Partial<Document>): Promise<void> {
     await this.init();
     const updateData: any = {};

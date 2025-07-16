@@ -31,8 +31,6 @@ export class DocumentHttpRepository implements IDocumentRepository {
     }
   }
 
-  
-
   async update(documentId: number, data: Partial<Document>): Promise<void> {
     try {
       const apiUrl = await this.getApiUrl();
@@ -47,5 +45,39 @@ export class DocumentHttpRepository implements IDocumentRepository {
         }`
       );
     }
+  }
+
+  async getByVehicleId(vehicleId: number): Promise<Document[]> {
+    try {
+      const apiUrl = await this.getApiUrl();
+      const response = await axios.get(
+        `${apiUrl}/documents/vehicle/${vehicleId}`
+      );
+      return response.data.map((doc: any) =>
+        new Document(
+          new Date(doc.expirationDate),
+          doc.documentTypeId,
+          doc.idVehicle,
+          doc.category,
+          doc.id
+        )
+      );
+    } catch (error) {
+      console.error("Error getting documents from API:", error);
+      return []; // Retorna array vacío si no hay documentos o hay error
+    }
+  }
+
+  async getByVehicleIds(vehicleIds: number[]): Promise<Document[]> {
+    if (vehicleIds.length === 0) {
+      return [];
+    }
+
+    // Para la implementación HTTP, podemos hacer llamadas en paralelo
+    const promises = vehicleIds.map((id) => this.getByVehicleId(id));
+    const results = await Promise.all(promises);
+
+    // Aplanar el array de arrays
+    return results.flat();
   }
 }

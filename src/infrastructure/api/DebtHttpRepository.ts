@@ -34,8 +34,6 @@ export class DebtHttpRepository implements IDebtRepository {
     }
   }
 
- 
-
   async update(debtId: number, data: Partial<Debt>): Promise<void> {
     try {
       const apiUrl = await this.getApiUrl();
@@ -51,5 +49,34 @@ export class DebtHttpRepository implements IDebtRepository {
         }`
       );
     }
+  }
+
+  async getByVehicleId(vehicleId: number): Promise<Debt[]> {
+    try {
+      const apiUrl = await this.getApiUrl();
+      const response = await axios.get(
+        `${apiUrl}/vehicle-debts/vehicle/${vehicleId}`
+      );
+      return response.data.map(
+        (debt: any) =>
+          new Debt(debt.amount, debt.type_debt_id, debt.vehicle_id, debt.id)
+      );
+    } catch (error) {
+      console.error("Error getting debts from API:", error);
+      return []; // Retorna array vacío si no hay deudas o hay error
+    }
+  }
+
+  async getByVehicleIds(vehicleIds: number[]): Promise<Debt[]> {
+    if (vehicleIds.length === 0) {
+      return [];
+    }
+
+    // Para la implementación HTTP, podemos hacer llamadas en paralelo
+    const promises = vehicleIds.map((id) => this.getByVehicleId(id));
+    const results = await Promise.all(promises);
+
+    // Aplanar el array de arrays
+    return results.flat();
   }
 }
