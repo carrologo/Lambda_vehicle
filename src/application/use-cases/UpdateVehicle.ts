@@ -51,8 +51,9 @@ export class UpdateVehicle {
             } else {
               // Crear nuevo documento para este vehículo
               doc.idVehicle = id;
+              console.log("Creating new document for vehicle:", doc);
               delete doc.id
-              await this.documentRepository.save(DocumentMapper.toDatabase(doc));
+              await this.documentRepository.save(doc);
             }
           } catch (error) {
             console.error(
