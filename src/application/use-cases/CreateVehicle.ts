@@ -18,6 +18,7 @@ export class CreateVehicle {
       // Guardar referencia a documentos y deudas antes de limpiar el objeto
       const documentsToSave = vehicle.documents;
       const debtsToSave = vehicle.debts;
+      
 
       // Subir imágenes si existen
       if (vehicle.images && vehicle.images.length > 0) {
