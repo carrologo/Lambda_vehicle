@@ -22,33 +22,54 @@ plugins:
 functions:
   VehicleAPI:
     name: VehicleAPI-${opt:stage, 'dev'}
-    handler: src/infrastructure/lambdas/handler.main
+    handler: src/infrastructure/lambdas/handler.createVehicleHandler
     timeout: 90
     events:
-      # Vehicle endpoints
       - http:
           path: /vehicle
           method: post
           cors: true
+  
+  listVehicles:
+    name: VehicleAPI-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.getAllVehiclesHandler
+    timeout: 90
+    events:
       - http:
           path: /vehicles
           method: get
           cors: true
+  
+  getVehicleById:
+    name: VehicleAPI-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.getDetailVehicleHandler
+    timeout: 90
+    events:
       - http:
           path: /vehicles/{id}
           method: get
           cors: true
+  
+  updateVehicleById:
+    name: VehicleAPI-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.updateVehicleHandler
+    timeout: 90
+    events:
       - http:
           path: /vehicles/{id}
           method: patch
           cors: true
-      # Images endpoint
+
+  getImage:
+    name: VehicleAPI-${opt:stage, 'dev'}
+    handler: src/infrastructure/lambdas/handler.getImageVehicleHandler
+    timeout: 90
+    events:
       - http:
           path: /image
           method: get
           cors: true
-          queryStringParameters:
-            id: true
+    
 
   SwaggerDocumentation:
     name: SwaggerDocumentation-${opt:stage, 'dev'}
@@ -67,3 +88,33 @@ functions:
           path: swagger-ui
           method: any
           cors: true
+
+  # VehicleAPI:
+  #   name: VehicleAPI-${opt:stage, 'dev'}
+  #   handler: src/infrastructure/lambdas/handler.main
+  #   timeout: 90
+  #   events:
+  #     # Vehicle endpoints
+  #     - http:
+  #         path: /vehicle
+  #         method: post
+  #         cors: true
+  #     - http:
+  #         path: /vehicles
+  #         method: get
+  #         cors: true
+  #     - http:
+  #         path: /vehicles/{id}
+  #         method: get
+  #         cors: true
+  #     - http:
+  #         path: /vehicles/{id}
+  #         method: patch
+  #         cors: true
+  #     # Images endpoint
+  #     - http:
+  #         path: /image
+  #         method: get
+  #         cors: true
+  #         queryStringParameters:
+  #           id: true
