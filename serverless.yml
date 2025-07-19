@@ -8,13 +8,12 @@ provider:
   environment:
     STAGE: ${opt:stage, 'dev'} # Agregar variable de entorno para el stage
     IS_OFFLINE: ${opt:isOffline, 'false'}
-
-apiGateway:
-binaryMediaTypes:
-  - "image/jpeg"
-  - "image/png"
-  - "image/gif"
-  - "application/octet-stream"
+  apiGateway:
+    binaryMediaTypes:
+      - "image/jpeg"
+      - "image/png"
+      - "image/gif"
+      - "application/octet-stream"
 
 plugins:
   - serverless-offline
@@ -23,7 +22,7 @@ functions:
   VehicleAPI:
     name: VehicleAPI-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.createVehicleHandler
-    timeout: 90
+    timeout: 29
     events:
       - http:
           path: /vehicle
@@ -31,9 +30,9 @@ functions:
           cors: true
   
   listVehicles:
-    name: VehicleAPI-${opt:stage, 'dev'}
+    name: ListVehicles-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.getAllVehiclesHandler
-    timeout: 90
+    timeout: 29
     events:
       - http:
           path: /vehicles
@@ -41,9 +40,9 @@ functions:
           cors: true
   
   getVehicleById:
-    name: VehicleAPI-${opt:stage, 'dev'}
+    name: GetVehicleById-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.getDetailVehicleHandler
-    timeout: 90
+    timeout: 29
     events:
       - http:
           path: /vehicles/{id}
@@ -51,9 +50,9 @@ functions:
           cors: true
   
   updateVehicleById:
-    name: VehicleAPI-${opt:stage, 'dev'}
+    name: UpdateVehicleById-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.updateVehicleHandler
-    timeout: 90
+    timeout: 29
     events:
       - http:
           path: /vehicles/{id}
@@ -61,9 +60,9 @@ functions:
           cors: true
 
   getImage:
-    name: VehicleAPI-${opt:stage, 'dev'}
+    name: GetImage-${opt:stage, 'dev'}
     handler: src/infrastructure/lambdas/handler.getImageVehicleHandler
-    timeout: 90
+    timeout: 29
     events:
       - http:
           path: /image
