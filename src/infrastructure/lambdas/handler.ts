@@ -106,15 +106,6 @@ export const getAllVehiclesHandler: APIGatewayProxyHandler = async (event) => {
       });
     }
 
-    if (requestParams.limit < 1 || requestParams.limit > 100) {
-      return corsResponse(400, {
-        error: {
-          code: "BadRequest",
-          message: "Limit must be between 1 and 100."
-        }
-      });
-    }
-
     const { data, pagination } = await getAllVehicles.execute(requestParams);
     return corsResponse(200, { data, pagination });
   } catch (error) {
