@@ -87,4 +87,16 @@ export class DebtSupabaseRepository implements IDebtRepository {
       throw new Error(error.message);
     }
   }
+
+  async delete(vehicleId: number): Promise<void> {
+    await this.init();
+    const { error } = await this.supabase!.from("vehicle_debt")
+      .delete()
+      .eq("vehicle_id", vehicleId);
+
+    if (error) {
+      console.error("Error deleting debt:", error);
+      throw new Error(error.message);
+    }
+  }
 }

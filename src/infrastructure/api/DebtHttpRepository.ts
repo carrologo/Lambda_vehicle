@@ -79,4 +79,8 @@ export class DebtHttpRepository implements IDebtRepository {
     // Aplanar el array de arrays
     return results.flat();
   }
+
+  async delete(vehicleId: number): Promise<void> {
+    
+  }
 }

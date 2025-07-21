@@ -20,7 +20,8 @@ export class VehicleEntittyMapper {
       vehicle.airbags,
       vehicle.images,
       vehicle.url_images,
-      vehicle.allImages
+      vehicle.allImages,
+      vehicle.plate
     );
   }
 }
