@@ -80,4 +80,8 @@ export class DocumentHttpRepository implements IDocumentRepository {
     // Aplanar el array de arrays
     return results.flat();
   }
+
+  async delete(vehicleId: number): Promise<void> {
+    
+  }
 }

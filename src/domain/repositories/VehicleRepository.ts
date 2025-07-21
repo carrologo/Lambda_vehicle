@@ -5,4 +5,5 @@ export interface IVehicleRepository {
   save(vehicle: VehicleEntity): Promise<VehicleEntity>;
   findById(id: number): Promise<Vehicle | null>;
   update(id: number, vehicle: Partial<Vehicle>): Promise<Vehicle>;
+  delete(id: number): Promise<void>;
 }

@@ -16,7 +16,7 @@ export class VehicleMapper {
         displacement: data.displacement,
         seat_material: data.seatMaterial,
         airbags: data.airbags,
-        images: data.images,
+        images: data.images || [],
         documents: data.documents,
         debts: data.debts,
         plate: data.plate

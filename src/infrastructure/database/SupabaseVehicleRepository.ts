@@ -55,10 +55,7 @@ export class VehicleRepository implements IVehicleRepository {
     }
 
     const vehicle = new Vehicle(data as any);
-    return {
-      ...vehicle,
-      allImages: vehicle.url_images ? vehicle.url_images.split(",") : [],
-    };
+    return vehicle
   }
 
   async update(id: number, vehicleData: Partial<Vehicle>): Promise<Vehicle> {
@@ -83,10 +80,7 @@ export class VehicleRepository implements IVehicleRepository {
     }
 
     const vehicle = new Vehicle(data as any);
-    return {
-      ...vehicle,
-      allImages: vehicle.url_images ? vehicle.url_images.split(",") : [],
-    };
+    return vehicle;
   }
 
   async getAll(queryParams: {
@@ -141,5 +135,18 @@ export class VehicleRepository implements IVehicleRepository {
         total: count || 0,
       },
     };
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.init();
+    const { error } = await this.supabase!
+      .from("vehicle")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting vehicle:", error);
+      throw new Error("Failed to delete vehicle");
+    }
   }
 }

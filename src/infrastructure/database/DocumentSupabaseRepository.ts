@@ -145,4 +145,16 @@ export class DocumentSupabaseRepository implements IDocumentRepository {
       throw new Error(error.message);
     }
   }
+
+  async delete(vehicleId: number): Promise<void> {
+    await this.init();
+    const { error } = await this.supabase!.from("vehicle_document")
+      .delete()
+      .eq("vehicle_id", vehicleId);
+
+    if (error) {
+      console.error("Error deleting vehicle_document relation:", error);
+      throw new Error(error.message);
+    }
+  }
 }

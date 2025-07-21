@@ -15,7 +15,8 @@ export class VehicleEntity {
     public airbags: boolean | undefined,
     public images: Images[] | undefined,
     public url_images: string | undefined,
-    public allImages: string[] | undefined
+    public allImages: string[] | undefined,
+    public plate: string | undefined,
   ) {}
 }
 
