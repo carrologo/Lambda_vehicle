@@ -1,4 +1,4 @@
-service: vehicle-service-api
+service: vehicle-service-api-prod
 frameworkVersion: "4"
 
 provider:
@@ -87,33 +87,3 @@ functions:
           path: swagger-ui
           method: any
           cors: true
-
-  # VehicleAPI:
-  #   name: VehicleAPI-${opt:stage, 'dev'}
-  #   handler: src/infrastructure/lambdas/handler.main
-  #   timeout: 90
-  #   events:
-  #     # Vehicle endpoints
-  #     - http:
-  #         path: /vehicle
-  #         method: post
-  #         cors: true
-  #     - http:
-  #         path: /vehicles
-  #         method: get
-  #         cors: true
-  #     - http:
-  #         path: /vehicles/{id}
-  #         method: get
-  #         cors: true
-  #     - http:
-  #         path: /vehicles/{id}
-  #         method: patch
-  #         cors: true
-  #     # Images endpoint
-  #     - http:
-  #         path: /image
-  #         method: get
-  #         cors: true
-  #         queryStringParameters:
-  #           id: true
