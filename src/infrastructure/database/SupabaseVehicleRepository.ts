@@ -100,7 +100,13 @@ export class VehicleRepository implements IVehicleRepository {
     await this.init();
     const { findBy, value, orderBy, isAsc, page = 1, limit = 10 } = queryParams;
   
-    let query = this.supabase!.from("vehicle").select("*", { count: "exact" });
+    let query = this.supabase!.from("vehicle").select(`
+      *,
+      debts:vehicle_debt(*),
+      documents:vehicle_document(
+        document(*)
+      )
+    `, { count: "exact" });
   
     if (findBy && value) {
       query = query.ilike(findBy, `%${value}%`); 
@@ -117,9 +123,16 @@ export class VehicleRepository implements IVehicleRepository {
 
     const vehicles = (data || []).map((item) => {
       const vehicle = new Vehicle(item as any);
+      
+      // Procesar documentos para aplanar la estructura
+      const processedDocuments = item.documents ? 
+        item.documents.map((doc: any) => doc.document) : [];
+      
       return {
         ...vehicle,
         allImages: vehicle.url_images ? vehicle.url_images.split(",") : [],
+        documents: processedDocuments,
+        debts: item.debts || []
       };
     });
   
