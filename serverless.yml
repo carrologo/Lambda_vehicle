@@ -20,7 +20,7 @@ plugins:
 
 functions:
   VehicleAPI:
-    name: VehicleAPI-${opt:stage, 'dev'}
+    name: VehicleAPI-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/handler.createVehicleHandler
     timeout: 29
     events:
@@ -30,7 +30,7 @@ functions:
           cors: true
   
   listVehicles:
-    name: ListVehicles-${opt:stage, 'dev'}
+    name: ListVehicles-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/handler.getAllVehiclesHandler
     timeout: 29
     events:
@@ -40,7 +40,7 @@ functions:
           cors: true
   
   getVehicleById:
-    name: GetVehicleById-${opt:stage, 'dev'}
+    name: GetVehicleById-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/handler.getDetailVehicleHandler
     timeout: 29
     events:
@@ -50,7 +50,7 @@ functions:
           cors: true
   
   updateVehicleById:
-    name: UpdateVehicleById-${opt:stage, 'dev'}
+    name: UpdateVehicleById-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/handler.updateVehicleHandler
     timeout: 29
     events:
@@ -60,7 +60,7 @@ functions:
           cors: true
 
   getImage:
-    name: GetImage-${opt:stage, 'dev'}
+    name: GetImage-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/handler.getImageVehicleHandler
     timeout: 29
     events:
@@ -71,7 +71,7 @@ functions:
     
 
   SwaggerDocumentation:
-    name: SwaggerDocumentation-${opt:stage, 'dev'}
+    name: SwaggerDocumentation-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/swaggerHandler.handler
     events:
       - http:
@@ -80,7 +80,7 @@ functions:
           cors: true
 
   SwaggerUI:
-    name: SwaggerUI-${opt:stage, 'dev'}
+    name: SwaggerUI-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/swaggerUIHandler.handler
     events:
       - http:
