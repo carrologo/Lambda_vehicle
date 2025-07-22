@@ -27,7 +27,7 @@ export class DocumentSupabaseRepository implements IDocumentRepository {
       .insert({
         expiration_date: document.expirationDate,
         category: document.category,
-        document_type_id: document.documentTypeId,
+        document_type_id: document.document_type_id,
       })
       .select()
       .single();
@@ -133,8 +133,8 @@ export class DocumentSupabaseRepository implements IDocumentRepository {
     if (data.category !== undefined) updateData.category = data.category;
     if (data.expirationDate !== undefined)
       updateData.expiration_date = data.expirationDate;
-    if (data.documentTypeId !== undefined)
-      updateData.document_type_id = data.documentTypeId;
+    if (data.document_type_id !== undefined)
+      updateData.document_type_id = data.document_type_id;
 
     const { error } = await this.supabase!.from("document")
       .update(updateData)
