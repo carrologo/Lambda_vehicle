@@ -6,4 +6,5 @@ export interface IDebtRepository {
   getByVehicleIds(vehicleIds: number[]): Promise<Debt[]>;
   update(debtId: number, data: Partial<Debt>): Promise<void>;
   delete(vehicleId: number): Promise<void>;
+  updateAllDebts(vehicleId: number, debts: Debt[]): Promise<void>;
 }
