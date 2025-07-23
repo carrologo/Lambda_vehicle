@@ -5,5 +5,7 @@ export interface IDocumentRepository {
   getByVehicleId(vehicleId: number): Promise<Document[]>;
   getByVehicleIds(vehicleIds: number[]): Promise<Document[]>;
   update(documentId: number, data: Partial<Document>): Promise<void>;
-  delete(vehicleId: number): Promise<void>;
+  deleteVehicleDocument(vehicleId: number): Promise<void>;
+  deleteDocument(documentId: number): Promise<void>;
+  updateAllDocuments(vehicleId: number, documents: Document[]): Promise<void>;
 }

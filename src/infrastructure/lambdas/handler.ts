@@ -202,8 +202,8 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
       });
     }
 
-    const body = event.body ? JSON.parse(event.body) : {};
-    const parsedBody = JSON.parse(body || "{}");
+    const parsedBody = event.body ? JSON.parse(event.body) : {};
+    
 
     if (Object.keys(parsedBody).length === 0) {
       return corsResponse(400, {

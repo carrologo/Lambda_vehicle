@@ -13,13 +13,13 @@ export class UpdateVehicle {
     private debtRepository: IDebtRepository
   ) {}
 
-  async execute(id: number, vehicleData: Vehicle): Promise<Vehicle> {
+  async execute(vehicleId: number, vehicleData: Vehicle): Promise<Vehicle> {
     try {
       // Get the existing vehicle data
-      const existingVehicle = await this.vehicleRepository.findById(id);
+      const existingVehicle = await this.vehicleRepository.findById(vehicleId);
 
       if (!existingVehicle) {
-        throw new Error(`Vehicle with ID ${id} not found`);
+        throw new Error(`Vehicle with ID ${vehicleId} not found`);
       }
 
       // Guardar referencias a documentos y deudas antes de actualizar
@@ -29,65 +29,31 @@ export class UpdateVehicle {
       console.log("Vehicle data before transformation:", vehicleData);
 
       // Limpiar documentos y deudas del objeto vehicle antes de actualizar en BD
+      delete vehicleData.images;
       delete vehicleData.documents;
       delete vehicleData.debts;
 
       // Actualizar datos del vehículo
       const updatedVehicle = await this.vehicleRepository.update(
-        id,
+        vehicleId,
         vehicleData
       );
 
       console.log("Updated vehicle:", updatedVehicle);
 
       // Actualizar documentos si se enviaron (usando el ID del vehículo del path)
-      if (documentsToUpdate && documentsToUpdate.length > 0) {
-        for (const doc of documentsToUpdate) {
-          try {
-            console.log("Processing document:", doc);
-            if (doc.id) {
-              const id = doc.id;
-              delete doc.id
-              // Actualizar documento existente
-              await this.documentRepository.update(id, DocumentMapper.toDatabase(doc));
-            } else {
-              // Crear nuevo documento para este vehículo
-              doc.idVehicle = id;
-              console.log("Creating new document for vehicle:", doc);
-              delete doc.id
-              await this.documentRepository.save(doc);
-            }
-          } catch (error) {
-            console.error(
-              `Error processing document ${doc.id || "new"}:`,
-              error
-            );
-            // Opcional: puedes decidir si continuar con los demás documentos o lanzar el error
-            // throw new Error(`Failed to process document: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          }
-        }
+      if (documentsToUpdate) {
+        await this.documentRepository.updateAllDocuments(vehicleId, documentsToUpdate);
       }
 
-      console.log("Updated documents for vehicle:", id);
+      console.log("Updated documents for vehicle:", vehicleId);
 
       // Actualizar deudas si se enviaron (usando el ID del vehículo del path)
-      if (debtsToUpdate && debtsToUpdate.length > 0) {
-        for (const debt of debtsToUpdate) {
-          if (debt.id) {
-            const id = debt.id;
-            delete debt.id
-            // Actualizar deuda existente
-            await this.debtRepository.update(id, debt);
-          } else {
-            // Crear nueva deuda para este vehículo
-            debt.VehicleId = id;
-            delete debt.id
-            await this.debtRepository.save(debt);
-          }
-        }
+      if (debtsToUpdate) {
+        await this.debtRepository.updateAllDebts(vehicleId, debtsToUpdate);
       }
 
-      console.log("Updated debts for vehicle:", id);
+      console.log("Updated debts for vehicle:", vehicleId);
 
   
 
