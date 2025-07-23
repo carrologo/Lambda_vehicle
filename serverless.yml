@@ -70,6 +70,26 @@ functions:
           cors: true
     
 
+  listGoogleDriveFolders:
+    name: ListGoogleDriveFolders-prod-${opt:stage, 'develop'}
+    handler: src/infrastructure/lambdas/handler.listGoogleDriveFoldersHandler
+    timeout: 29
+    events:
+      - http:
+          path: /drive/folders
+          method: get
+          cors: true
+  
+  deleteGoogleDriveFolders:
+    name: DeleteGoogleDriveFolders-prod-${opt:stage, 'develop'}
+    handler: src/infrastructure/lambdas/handler.deleteGoogleDriveFoldersHandler
+    timeout: 29
+    events:
+      - http:
+          path: /drive/folders
+          method: delete
+          cors: true
+
   SwaggerDocumentation:
     name: SwaggerDocumentation-prod-${opt:stage, 'develop'}
     handler: src/infrastructure/lambdas/swaggerHandler.handler

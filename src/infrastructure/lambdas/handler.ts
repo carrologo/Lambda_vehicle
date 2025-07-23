@@ -1,8 +1,4 @@
-import {
-  APIGatewayProxyHandler,
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from "aws-lambda";
+import { APIGatewayProxyHandler } from "aws-lambda";
 import { VehicleRepository } from "../database/SupabaseVehicleRepository";
 import { CreateVehicle } from "../../application/use-cases/CreateVehicle";
 import { GetAllVehicles } from "../../application/use-cases/GetAllVehicles";
@@ -18,11 +14,14 @@ import { DocumentSupabaseRepository } from "../database/DocumentSupabaseReposito
 import { DebtSupabaseRepository } from "../database/DebtSupabaseRepository";
 import { DebtHttpRepository } from "../api/DebtHttpRepository";
 import { DocumentHttpRepository } from "../api/DocumentHttpRepository";
+import { DeleteFoldersRepository } from "../google/DeleteFoldersRepository";
+import { DeleteGoogleDriveFolders } from "../../application/use-cases/DeleteGoogleDriveFolders";
 
 // Initialize repositories and use cases
 const vehicleRepository = new VehicleRepository();
 const downloadAllImagesFromFolder = new DownloadImagesFromFolder();
 const uploadImagesRepository = new UploadImagesRepository();
+const deleteFoldersRepository = new DeleteFoldersRepository();
 
 // Use database repositories instead of HTTP repositories
 const documentRepositoryDb = new DocumentSupabaseRepository();
@@ -58,6 +57,7 @@ const updateVehicle = new UpdateVehicle(
 );
 
 const getImages = new GetImages(downloadAllImagesFromFolder);
+const deleteGoogleDriveFolders = new DeleteGoogleDriveFolders(deleteFoldersRepository);
 
 
 export const createVehicleHandler: APIGatewayProxyHandler = async (event) => {
@@ -330,3 +330,205 @@ export const updateVehicleHandler: APIGatewayProxyHandler = async (event) => {
     });
   }
 }
+
+/**
+ * @swagger
+ * /drive/folders:
+ *   get:
+ *     summary: List Google Drive folders
+ *     parameters:
+ *       - in: query
+ *         name: pattern
+ *         schema:
+ *           type: string
+ *         description: Pattern to filter folders by name (optional)
+ *       - in: query
+ *         name: exactMatch
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Whether to use exact match for pattern
+ *     responses:
+ *       200:
+ *         description: List of Google Drive folders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalFolders:
+ *                       type: integer
+ *                     deletedFolders:
+ *                       type: integer
+ *                     failedFolders:
+ *                       type: integer
+ *                     folders:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           deleted:
+ *                             type: boolean
+ *       500:
+ *         description: Internal server error
+ */
+export const listGoogleDriveFoldersHandler: APIGatewayProxyHandler = async (event) => {
+  try {
+    const pattern = event.queryStringParameters?.pattern;
+    const exactMatch = event.queryStringParameters?.exactMatch === "true";
+
+    const result = await deleteGoogleDriveFolders.listFolders(pattern, exactMatch);
+    
+    return corsResponse(200, {
+      message: "Google Drive folders listed successfully",
+      data: result
+    });
+  } catch (error) {
+    return corsResponse(500, {
+      error: {
+        code: "INTERNAL_ERROR",
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      },
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /drive/folders:
+ *   delete:
+ *     summary: Delete Google Drive folders
+ *     parameters:
+ *       - in: query
+ *         name: pattern
+ *         schema:
+ *           type: string
+ *         description: Pattern to filter folders by name (optional)
+ *       - in: query
+ *         name: exactMatch
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Whether to use exact match for pattern
+ *       - in: query
+ *         name: dryRun
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Whether to perform a dry run (list only, don't delete)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               confirmDelete:
+ *                 type: boolean
+ *                 description: Must be true to actually delete folders
+ *             required:
+ *               - confirmDelete
+ *     responses:
+ *       200:
+ *         description: Folders deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalFolders:
+ *                       type: integer
+ *                     deletedFolders:
+ *                       type: integer
+ *                     failedFolders:
+ *                       type: integer
+ *                     folders:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           deleted:
+ *                             type: boolean
+ *                           error:
+ *                             type: string
+ *       400:
+ *         description: Validation error or confirmation required
+ *       500:
+ *         description: Internal server error
+ */
+export const deleteGoogleDriveFoldersHandler: APIGatewayProxyHandler = async (event) => {
+  try {
+    const pattern = event.queryStringParameters?.pattern;
+    const exactMatch = event.queryStringParameters?.exactMatch === "true";
+    const dryRunParam = event.queryStringParameters?.dryRun === "true";
+
+    // Parse body for confirmation
+    let confirmDelete = false;
+    if (event.body) {
+      try {
+        const parsedBody = JSON.parse(event.body);
+        confirmDelete = parsedBody.confirmDelete === true;
+      } catch (parseError) {
+        console.error("Failed to parse request body:", parseError);
+        return corsResponse(400, {
+          error: {
+            code: "INVALID_BODY",
+            message: "Invalid JSON in request body",
+          },
+        });
+      }
+    }
+
+    // Require confirmation for actual deletion
+    const dryRun = dryRunParam || !confirmDelete;
+
+    if (!dryRun && !confirmDelete) {
+      return corsResponse(400, {
+        error: {
+          code: "CONFIRMATION_REQUIRED",
+          message: "To delete folders, set confirmDelete: true in the request body",
+        },
+      });
+    }
+
+    const result = await deleteGoogleDriveFolders.execute({
+      pattern,
+      exactMatch,
+      dryRun
+    });
+
+    const message = dryRun 
+      ? "Google Drive folders listed (dry run - no deletion performed)"
+      : "Google Drive folders deleted successfully";
+
+    return corsResponse(200, {
+      message,
+      data: result
+    });
+  } catch (error) {
+    return corsResponse(500, {
+      error: {
+        code: "INTERNAL_ERROR",
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      },
+    });
+  }
+};
